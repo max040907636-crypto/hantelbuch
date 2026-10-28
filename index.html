@@ -1,0 +1,1001 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="description" content="Hantelbuch – Trainingsplan, Trainings-Tagebuch und Dehnplan">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hantelbuch">
+<style>/* Grundeinstellungen für die eigene Web-App (Abstand zur Handy-Kerbe) */
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}</style>
+<title>Hantelbuch</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Barlow+Condensed:wght@600;700&display=swap">
+<style>
+/* Layout: eine schmale Handy-Spalte (max. 600 px). Oben Kopfzeile, unten Tabs.
+   Look: nur Schwarz und Weiß (plus Grautöne) – hell: weißer Grund, dunkel: schwarzer Grund. */
+:root{
+  --bg:#ffffff; --surface:#ffffff; --soft:#f2f2f2; --line:#e3e3e3;
+  --fg:#0a0a0a; --muted:#6b6b6b; --inv:#ffffff;
+  --muscle:#ececec; --heat1:#c9c9c9; --heat2:#7d7d7d; --heat3:#0a0a0a;
+  --f-display:"Barlow Condensed","Arial Narrow","Roboto Condensed",sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --r:14px; --nav-h:62px; --vid-filter:none;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#000000; --surface:#0b0b0b; --soft:#171717; --line:#2a2a2a;
+  --fg:#f7f7f7; --muted:#a3a3a3; --inv:#000000;
+  --muscle:#1f1f1f; --heat1:#3d3d3d; --heat2:#8f8f8f; --heat3:#f7f7f7; --vid-filter:invert(1);
+  color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#000000; --surface:#0b0b0b; --soft:#171717; --line:#2a2a2a;
+  --fg:#f7f7f7; --muted:#a3a3a3; --inv:#000000;
+  --muscle:#1f1f1f; --heat1:#3d3d3d; --heat2:#8f8f8f; --heat3:#f7f7f7; --vid-filter:invert(1);
+  color-scheme:dark; }
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
+a{color:var(--fg)}
+
+/* Kopfzeile */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.top-in{max-width:600px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;display:flex;align-items:center;gap:10px}
+.brand{font-family:var(--f-display);font-weight:700;font-size:24px;letter-spacing:.06em;text-transform:uppercase;line-height:1;display:flex;align-items:center;gap:8px}
+.brand svg{width:28px;height:18px}
+.sync{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);min-width:0}
+.sync i{width:9px;height:9px;border-radius:50%;border:2px solid var(--muted);flex:none}
+.sync.cloud i{background:var(--fg);border-color:var(--fg)}
+.sync span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:430px){ .sync span{display:none} }
+.icon-btn{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;flex:none}
+.icon-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* Inhalt */
+.wrap{max-width:600px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px calc(var(--nav-h) + 110px + env(safe-area-inset-bottom,0px))}
+.stack{display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--f-display);text-transform:uppercase;letter-spacing:.02em;line-height:1;margin:0;text-wrap:balance}
+h1{font-size:clamp(30px,9vw,42px);font-weight:700;overflow-wrap:anywhere}
+.focus h1{font-size:clamp(28px,8vw,36px)}
+h2{font-size:28px;font-weight:700}
+h3{font-size:21px;font-weight:700}
+p{margin:0}
+.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card.ink{background:var(--fg);color:var(--inv);border-color:var(--fg)}
+.card.ink .muted,.card.ink .eyebrow{color:var(--inv);opacity:.7}
+.card.note{border:2px solid var(--fg)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:13px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);font-weight:700}
+.chip.solid{background:var(--fg);color:var(--inv);border-color:var(--fg)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:10px 18px;border-radius:12px;border:2px solid var(--fg);background:var(--surface);color:var(--fg);font-weight:700;font-size:17px;text-decoration:none}
+.btn.primary{background:var(--fg);color:var(--inv)}
+.btn:disabled{opacity:.35}
+.card.ink .btn.primary{background:var(--inv);color:var(--fg);border-color:var(--inv)}
+.card.ink .btn{border-color:var(--inv);color:var(--inv);background:transparent}
+.btn.block{width:100%}
+.btn-row{display:flex;flex-wrap:wrap;gap:8px}
+.btn-row .btn{flex:1 1 130px}
+.link{background:none;border:0;padding:4px 0;color:inherit;font-weight:700;text-decoration:underline;text-underline-offset:3px;text-align:left}
+.big{font-family:var(--f-display);font-size:72px;line-height:.85;font-weight:700;font-variant-numeric:tabular-nums}
+.big-row{display:flex;align-items:flex-end;gap:12px}
+
+/* Hantelscheibe als Tages-Abzeichen */
+.plate{width:48px;height:48px;border-radius:50%;background:var(--fg);color:var(--inv);display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:24px;flex:none;position:relative}
+.plate::after{content:"";position:absolute;inset:5px;border-radius:50%;border:2px solid var(--inv);opacity:.5}
+.card.ink .plate{background:var(--inv);color:var(--fg)}
+.card.ink .plate::after{border-color:var(--fg)}
+.day-head{display:flex;gap:12px;align-items:center}
+.day-head > div{min-width:0}
+
+/* Listen */
+.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.list li{border-top:1px solid var(--line)}
+.list li:first-child{border-top:0}
+.row{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;background:none;border:0;padding:12px 0;text-align:left}
+.row b{font-weight:700;display:block}
+.row small{display:block;color:var(--muted);font-size:13px}
+.row .num{font-family:var(--f-display);font-size:20px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.area-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;border-bottom:2px solid var(--fg);padding-bottom:4px}
+
+/* Woche (Mo–So) und Kalender */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.cal .wd{font-size:11px;text-align:center;color:var(--muted);font-weight:700;text-transform:uppercase}
+.cal button{aspect-ratio:1;max-width:100%;border-radius:10px;border:1px solid transparent;background:transparent;font-family:var(--f-display);font-size:19px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;gap:2px;padding:0}
+.cal small{font-size:10px;font-family:var(--f-body);font-weight:700}
+.st-planned{border:2px dashed var(--fg)!important}
+.st-today{border:2px solid var(--fg)!important}
+.st-done{background:var(--fg)!important;color:var(--inv)}
+.st-draft{background:var(--soft)!important;border:2px solid var(--fg)!important}
+.st-missed{border:2px solid var(--muted)!important;color:var(--muted);text-decoration:line-through}
+.st-excused{background:var(--soft)!important;color:var(--muted)}
+.is-today{box-shadow:0 0 0 3px var(--bg) inset,0 0 0 5px var(--fg) inset}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:14px;border-radius:4px;display:inline-block}
+.stat-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{border:1px solid var(--line);border-radius:var(--r);padding:10px;min-width:0}
+.stat b{display:block;font-family:var(--f-display);font-size:32px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.cal-nav{display:flex;align-items:center;gap:8px}
+.cal-nav h2{flex:1;text-align:center;font-size:24px}
+.badges{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.badge{border:2px dashed var(--line);border-radius:12px;padding:10px 6px;text-align:center;color:var(--muted);min-width:0}
+.badge b{display:block;font-family:var(--f-display);font-size:28px;line-height:1}
+.badge span{font-size:12px;font-weight:700}
+.badge.got{border:2px solid var(--fg);background:var(--fg);color:var(--inv)}
+
+/* Video */
+.vid-box{background:#ffffff;border-radius:var(--r);overflow:hidden;border:1px solid var(--line);aspect-ratio:1;max-width:100%;filter:var(--vid-filter)}
+.vid-box video{width:100%;height:100%;display:block;object-fit:cover}
+.vid-none{display:grid;place-items:center;color:#6b6b6b;font-size:14px;height:100%;padding:16px;text-align:center}
+
+/* Training */
+.prog{display:flex;gap:4px}
+.prog i{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.prog i.done{background:var(--fg)}
+.prog i.now{background:var(--muted)}
+.tr-top{display:flex;align-items:center;gap:10px}
+.tr-top .grow{flex:1;min-width:0}
+.hint{font-size:15px;padding:10px 12px;border-radius:10px;background:var(--soft)}
+.prev{font-size:13px;color:var(--muted)}
+/* Gewicht: zum Aufklappen mit Pfeil */
+.wt{border:2px solid var(--fg);border-radius:var(--r);background:var(--surface)}
+.wt > summary{list-style:none;display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer}
+.wt > summary::-webkit-details-marker{display:none}
+.wt .arr{font-size:22px;line-height:1;display:inline-block;width:20px;text-align:center}
+.wt[open] .arr{transform:rotate(90deg)}
+.wt .grow{flex:1;min-width:0;display:flex;flex-direction:column}
+.wt summary b{font-family:var(--f-display);font-size:30px;line-height:1}
+.wt-body{padding:0 14px 14px;display:flex;flex-direction:column;gap:12px}
+.stepper{display:grid;grid-template-columns:64px minmax(0,1fr) auto 64px;gap:8px;align-items:center}
+.stepper button{height:60px;border-radius:12px;border:2px solid var(--fg);background:var(--surface);font-size:32px;font-weight:700;line-height:1}
+.stepper input{height:60px;border-radius:12px;border:1px solid var(--line);background:var(--bg);text-align:center;font-family:var(--f-display);font-size:34px;font-weight:700;width:100%;min-width:0;font-variant-numeric:tabular-nums}
+.stepper span{font-weight:700}
+.lv{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:var(--fg);color:var(--inv);font-weight:700;font-size:14px;white-space:nowrap}
+.meter{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+.meter span{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--muted);min-width:0;text-align:center}
+.meter i{display:block;width:100%;height:10px;border-radius:5px;background:var(--line)}
+.meter .on i{background:var(--fg)}
+.meter .cur{color:var(--fg)}
+.sets{display:flex;flex-direction:column;gap:6px}
+.set,.set-h{display:grid;grid-template-columns:30px minmax(56px,auto) minmax(0,1fr) 54px;gap:8px;align-items:center}
+.set-h span{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;text-align:center}
+.set{padding:4px;border-radius:10px}
+.set.ok{background:var(--soft)}
+.set-n{font-family:var(--f-display);font-size:19px;font-weight:700;text-align:center;color:var(--muted)}
+.set-kg{font-family:var(--f-display);font-size:20px;font-weight:700;white-space:nowrap;text-align:right}
+.set input{width:100%;height:50px;border-radius:10px;border:1px solid var(--line);background:var(--bg);text-align:center;font-family:var(--f-display);font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;min-width:0}
+.set input::placeholder{color:var(--muted);opacity:.8;font-size:17px}
+.chk{width:54px;height:50px;border-radius:10px;border:2px solid var(--fg);background:var(--surface);font-size:24px;font-weight:700;color:var(--fg)}
+.set.ok .chk{background:var(--fg);color:var(--inv)}
+details.how{border-top:1px solid var(--line);padding-top:10px}
+details.how summary{cursor:pointer;font-weight:700}
+.prose{display:flex;flex-direction:column;gap:8px;max-width:65ch}
+.prose ol,.prose ul{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:5px}
+.nav-row{display:grid;grid-template-columns:1fr 2fr;gap:8px}
+.feel{display:flex;gap:6px;flex-wrap:wrap}
+.feel button{flex:1 1 52px;min-height:46px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:700}
+.feel button.on{background:var(--fg);color:var(--inv);border-color:var(--fg)}
+textarea{width:100%;min-height:72px;border-radius:10px;border:1px solid var(--line);background:var(--bg);padding:10px;resize:vertical}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:13px;color:var(--muted);font-weight:700}
+.field input,.field select{height:48px;border-radius:10px;border:1px solid var(--line);background:var(--bg);padding:0 10px;width:100%;min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+
+/* Dehnen */
+.daychips{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.daychips button{min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:14px;padding:0}
+.daychips button.on{background:var(--fg);color:var(--inv);border-color:var(--fg)}
+.daychips button.today{box-shadow:0 0 0 2px var(--fg) inset}
+.daychips button.on.today{box-shadow:none}
+.play{width:40px;height:40px;border-radius:50%;background:var(--fg);color:var(--inv);display:grid;place-items:center;font-size:14px;flex:none}
+
+/* Fortschritt */
+.bodymap svg{width:100%;max-width:320px;height:auto;display:block;margin:0 auto}
+.mbars{display:flex;flex-direction:column;gap:7px}
+.mbar{display:grid;grid-template-columns:minmax(0,9.5em) minmax(0,1fr) 3em;gap:8px;align-items:center;font-size:14px}
+.mbar .track{position:relative;height:12px;border-radius:6px;background:var(--soft);overflow:hidden}
+.mbar .zone{position:absolute;top:0;bottom:0;border-left:2px dotted var(--muted);border-right:2px dotted var(--muted)}
+.mbar .fill{position:absolute;left:0;top:3px;bottom:3px;border-radius:4px;background:var(--fg)}
+.mbar .v{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.chart svg{width:100%;height:auto;display:block}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
+
+/* Tabs */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--bg);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+.tabs-in{max-width:600px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));height:var(--nav-h)}
+.tabs a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-decoration:none;color:var(--muted);font-size:11px;font-weight:700}
+.tabs a svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tabs a[aria-current="page"]{color:var(--fg)}
+.focus .tabs{display:none}
+
+/* Pausen-Timer */
+.timer{position:fixed;z-index:24;left:0;right:0;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 8px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.focus .timer{bottom:calc(env(safe-area-inset-bottom,0px) + 12px)}
+.timer-in{max-width:568px;margin:0 auto;background:var(--fg);color:var(--inv);border-radius:14px;padding:10px 12px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;overflow:hidden;position:relative}
+.timer-in .t{font-family:var(--f-display);font-size:36px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.timer-in .lbl{font-size:12px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.timer-in .tb{display:flex;gap:6px}
+.timer-in .tb button{min-height:42px;padding:0 10px;border-radius:9px;border:1px solid var(--inv);background:transparent;color:var(--inv);font-weight:700;font-size:14px}
+.timer-in .bar{position:absolute;left:0;bottom:0;height:4px;background:var(--inv);opacity:.6}
+
+/* Fenster von unten */
+.sheet-wrap{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:600px;max-height:92%;overflow-y:auto;border-radius:18px 18px 0 0;padding-block:16px calc(20px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:12px}
+.sheet-top{display:flex;align-items:flex-start;gap:10px}
+.sheet-top h2{flex:1}
+.toast{position:fixed;z-index:50;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 70px);background:var(--fg);color:var(--inv);padding:12px 18px;border-radius:12px;font-weight:700;font-size:15px;max-width:calc(100% - 32px);text-align:center}
+.flash{outline:3px solid var(--fg);outline-offset:3px}
+@media (prefers-reduced-motion: no-preference){
+  .sheet{animation:up .22s ease-out}
+  @keyframes up{from{transform:translateY(30px);opacity:.6}to{transform:none;opacity:1}}
+  .wt .arr{transition:transform .2s}
+  .flash{animation:pop .5s ease-in-out 4}
+  @keyframes pop{50%{transform:scale(1.15)}}
+}
+</style>
+
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><svg viewBox="0 0 28 18" aria-hidden="true"><rect x="1" y="8" width="26" height="2" rx="1" fill="currentColor"/><rect x="4" y="2" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="20" y="2" width="4" height="14" rx="1.5" fill="currentColor"/></svg>Hantelbuch</div>
+    <div class="sync" id="sync"><i></i><span>Lädt…</span></div>
+    <button class="icon-btn" id="themeBtn" type="button" aria-label="Hell/Dunkel umschalten" title="Hell/Dunkel"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+    <button class="icon-btn" id="fsBtn" type="button" aria-label="Vollbild" title="Vollbild"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+  </div>
+</header>
+
+<main class="wrap" id="main"></main>
+
+<div class="timer" id="timer" hidden>
+  <div class="timer-in" role="status" aria-live="polite">
+    <div><div class="t" id="timerT">0:00</div><div class="lbl" id="timerL">Pause</div></div>
+    <div class="tb"><button type="button" data-act="t-minus">−15</button><button type="button" data-act="t-plus">+30</button><button type="button" data-act="t-stop">OK</button></div>
+    <div class="bar" id="timerP"></div>
+  </div>
+</div>
+
+<nav class="tabs" aria-label="Bereiche">
+  <div class="tabs-in">
+    <a href="#start" data-tab="start"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Start</a>
+    <a href="#plan" data-tab="plan"><svg viewBox="0 0 24 24"><path d="M3 12h3M18 12h3M6 8v8M18 8v8M9 6v12M15 6v12M9 12h6"/></svg>Plan</a>
+    <a href="#dehnen" data-tab="dehnen"><svg viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="2"/><path d="M12 7v6l-4 8M12 13l4 8M5 9l7-1 7 1"/></svg>Dehnen</a>
+    <a href="#kalender" data-tab="kalender"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 15l2 2 4-4"/></svg>Kalender</a>
+    <a href="#mehr" data-tab="mehr"><svg viewBox="0 0 24 24"><path d="M3 20h18M5 16l4-5 4 3 6-8"/></svg>Mehr</a>
+  </div>
+</nav>
+
+<div class="sheet-wrap" id="sheetWrap" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+"use strict";
+/* =====================================================================
+   HANTELBUCH v3 – Trainingsplan, Trainings-Tagebuch und Dehnplan
+   Mi = A (Arme & Schultern) · Fr = B (Brust & Rücken) · Sa = C (Beine & Bauch)
+   Läuft in Claude (Speichern im Konto) und als eigene Web-App (Speichern auf dem Gerät).
+   ===================================================================== */
+
+const PLAN_START = "2026-11-02";   // Der Plan beginnt am Montag, 2. November 2026
+const IN_CLAUDE = !!(window.claude && typeof window.claude.use === "function");
+
+/* Videos: eigene Animationen (HyperFrames). In Claude als Datei der App, sonst im Ordner „videos/“ */
+const BLOB = {schulterdruecken:"a86c8d0f6a896f92055ffb0157fa2edb",seitheben:"7c56b0e747a2633b2ecb546911ad03b1",reverse_fly:"6bf1b45501d44e537c960f2b7d557683",curls:"8d32302b0137a5ae78b4f233f265c5fb",hammercurls:"acea7a298b5f6a16b28ce51589b5b261",kabelcurls:"b27e9b94d7e7c6bae821b5842387fece",trizeps:"5414a4979e84eaee53f4e6beef5f91c8",ueberkopf_trizeps:"e0ff57ede4304d819597dc707d497c6c",kickbacks:"e219b67339c42fc48edb2f197bafb745",kh_bank:"0bb201cd17af8d59b5882a42d8319b2f",brustpresse:"ed86dd4471c3587479eabb1fadae7d21",butterfly:"13d5d444c3e95918370b04e2b99ec8de",latziehen:"366f940e790807078ed09095d86ffaf8",kabelrudern:"70922ddd0600952210119fe2d6397bb8",kh_rudern:"524520661dab29734667ca3da4dbc4ae",goblet:"cbc58535e3956d394cff3b8783d23d37",beinpresse:"72a8764dae6489fc248439dd07d91e40",beinstrecker:"2533806e9b6d360b52da40e39dcb2b30",rdl:"d9fb8b177e7328ee7207d6d592086578",hip_thrust:"e30864e9b66d3c73ae92e5f957e745a4",beinbeuger:"54fd096baf0adc9da0f2cf38d9219ce0",kabelcrunch:"506b99c37f7b288cb287e1c3b432ca50",knieheben:"c6694a145d79583f296666271e3bdd8e",plank:"d49fd5ed69238b309573e035c129a6a9",wade_gerade:"16c4a36111945d8f71d17d79df245dcc",wade_gebeugt:"15f3d81c2a51341036602e1a706ed168",fusskreisen:"74bb20f91403da9c56bd4df7eec5cddd",handtuch:"0ac813c686ad6042b673fe443a295780",oberschenkel_vorne:"bc31faabc46879a7e89a06a8ade1d9cf",oberschenkel_hinten:"dc1923160adec2b9049c3bb98220eea9",brust_dehnen:"bebba42a1c6588d6c481341591ee0ae0",schulter_dehnen:"39f4dcf68041e275ce071fa4d29ec10c",trizeps_dehnen:"55ae670b48d50e9db702e6eef76fb07d",ruecken_dehnen:"4293aa59d561c45e04a1c1b71bd66206"};
+const vidSrc = id => IN_CLAUDE ? (BLOB[id] ? "/_blob/" + BLOB[id] : "") : "videos/" + id + ".mp4";
+
+/* ---------- Level: Spaß-Einstufung deiner Gewichte ----------
+   std = [Anfänger, Fortgeschrittener Anfänger, Mittelstufe, Fortgeschritten, Elite]
+   als 1RM in kg (bzw. Wdh. / Sek.) für Männer mit ca. 70 kg – Daten: strengthlevel.com */
+const LV = [
+  {n:"Lauch", e:"🥬", d:"unter Anfänger-Niveau – jeder fängt hier an"},
+  {n:"Rookie", e:"🐣", d:"Anfänger-Niveau"},
+  {n:"Maschine", e:"⚙️", d:"fortgeschrittener Anfänger"},
+  {n:"Beast", e:"🦍", d:"Mittelstufe"},
+  {n:"Alpha", e:"🐺", d:"fortgeschritten"},
+  {n:"Legende", e:"👑", d:"Elite"}
+];
+
+/* ---------- Übungen ----------
+   p = Hauptmuskeln, s = Hilfsmuskeln (halber Satz), min/max = Wdh.-Bereich, rest = Pause (Sek.),
+   inc = nächste Gewichtsstufe, start = Startgewicht für ca. 70 kg, std = Level-Grenzen (siehe oben) */
+const EX = {
+  schulterdruecken:{name:"Schulterdrücken sitzend",art:"Kurzhanteln",p:["schultern"],s:["trizeps"],sets:2,min:8,max:12,rest:120,inc:2,start:{kg:8,von:6,bis:10,wie:" je Hand"},std:[15,21,29,39,49],
+    how:["Bank fast senkrecht stellen.","Hanteln auf Schulterhöhe, Handflächen nach vorne.","Nach oben drücken, bis die Arme fast gestreckt sind.","Langsam zurück bis etwa Kinnhöhe."],fehler:["Hohlkreuz machen.","Hanteln oben zusammenknallen."],tipp:"Rücken bleibt an der Lehne, Bauch leicht angespannt.",yt:"Kurzhantel Schulterdrücken sitzend richtige Ausführung"},
+  seitheben:{name:"Seitheben",art:"Kurzhanteln",p:["schultern"],s:[],sets:2,min:12,max:15,rest:90,inc:1,start:{kg:3,von:2,bis:4,wie:" je Hand"},std:[4,9,15,23,32],
+    how:["Aufrecht stehen, Arme leicht gebeugt.","Hanteln seitlich bis etwa Schulterhöhe heben – die Ellbogen führen.","Kurz halten, langsam absenken."],fehler:["Schwung aus dem Körper.","Schultern zu den Ohren ziehen."],tipp:"Leichtes Gewicht reicht. Wenn du schwingen musst, ist es zu schwer.",yt:"Seitheben Kurzhantel richtige Ausführung"},
+  reverse_fly:{name:"Reverse Butterfly",art:"Maschine",p:["oben"],s:["schultern"],sets:2,min:12,max:15,rest:90,inc:2.5,start:{kg:15,von:10,bis:20,wie:""},std:[24,39,59,82,109],
+    how:["Maschine auf „Reverse“ stellen, Brust ans Polster.","Griffe auf Schulterhöhe, Arme leicht gebeugt.","Arme nach hinten-außen ziehen, Schulterblätter zusammen.","Langsam zurück."],fehler:["Schultern hochziehen.","Mit Schwung arbeiten."],tipp:"Kleine Muskeln – leicht anfangen. Gut für die Haltung.",yt:"Reverse Butterfly Maschine richtige Ausführung"},
+  curls:{name:"Kurzhantel-Curls",art:"Kurzhanteln",p:["bizeps"],s:[],sets:2,min:10,max:15,rest:90,inc:1,start:{kg:6,von:5,bis:8,wie:" je Hand"},std:[7,12,20,29,40],
+    how:["Aufrecht stehen, Ellbogen seitlich am Körper.","Hanteln hochbeugen, Handflächen zeigen nach oben.","Oben kurz anspannen, langsam ablassen."],fehler:["Schwung aus dem Rücken.","Ellbogen wandern nach vorne."],tipp:"Wenn du schaukeln musst, nimm die leichtere Hantel.",yt:"Bizeps Curls Kurzhantel richtige Ausführung"},
+  hammercurls:{name:"Hammer-Curls",art:"Kurzhanteln",p:["bizeps"],s:[],sets:2,min:10,max:15,rest:90,inc:1,start:{kg:6,von:5,bis:8,wie:" je Hand"},std:[9,14,21,29,39],
+    how:["Hanteln seitlich, Daumen zeigen nach vorne.","Ellbogen bleiben am Körper.","Hochbeugen – die Handflächen schauen zueinander.","Langsam ablassen."],fehler:["Schwung aus dem Rücken.","Ellbogen wandern nach vorne."],tipp:"Trifft auch den Unterarm – macht den Oberarm dicker.",yt:"Hammer Curls richtige Ausführung"},
+  kabelcurls:{name:"Bizeps-Curls am Kabel",art:"Kabelzug (Stange)",p:["bizeps"],s:[],sets:2,min:10,max:15,rest:90,inc:2.5,start:{kg:10,von:7.5,bis:15,wie:""},std:[17,29,46,67,91],
+    how:["Gerade Stange am unteren Kabelzug.","Aufrecht stehen, Ellbogen am Körper.","Stange hochbeugen bis kurz vor die Schultern.","Langsam ablassen."],fehler:["Mit dem Rücken nachhelfen.","Ellbogen wandern nach vorne."],tipp:"Das Kabel hält den Bizeps auch unten unter Spannung.",yt:"Bizeps Curls am Kabel richtige Ausführung"},
+  trizeps:{name:"Trizepsdrücken am Kabel",art:"Kabelzug (Seil)",p:["trizeps"],s:[],sets:2,min:10,max:15,rest:90,inc:2.5,start:{kg:10,von:10,bis:20,wie:""},std:[14,26,41,60,82],
+    how:["Seil am oberen Kabelzug, aufrecht davor stehen.","Ellbogen eng am Körper – die Oberarme bewegen sich nicht.","Seil nach unten drücken, bis die Arme gestreckt sind.","Langsam zurück."],fehler:["Ellbogen wandern nach vorne.","Oberkörper drückt mit."],tipp:"Nur die Unterarme bewegen sich – wie ein Scharnier.",yt:"Trizepsdrücken am Kabel Seil richtige Ausführung"},
+  ueberkopf_trizeps:{name:"Trizepsdrücken über Kopf",art:"Kabelzug (Seil)",p:["trizeps"],s:[],sets:2,min:10,max:15,rest:90,inc:2.5,start:{kg:10,von:7.5,bis:15,wie:""},std:[11,22,37,57,79],
+    how:["Seil am Kabelzug auf Hüfthöhe, umdrehen, Seil hinter den Kopf.","Schrittstellung, Oberkörper leicht nach vorne.","Ellbogen zeigen nach vorne-oben und bleiben dort.","Arme strecken, langsam zurück bis zur Dehnung."],fehler:["Ellbogen gehen weit auseinander.","Bewegung aus dem Rücken."],tipp:"Die Dehnung über dem Kopf trainiert den langen Teil vom Trizeps besonders gut.",yt:"Trizepsdrücken über Kopf Kabel richtige Ausführung"},
+  kickbacks:{name:"Trizeps-Kickbacks",art:"Kurzhantel",p:["trizeps"],s:[],sets:2,min:12,max:15,rest:90,inc:1,jeSeite:true,start:{kg:4,von:3,bis:6,wie:" (eine Hantel)"},std:[4,9,16,26,37],
+    how:["Eine Hand auf die Bank, vorgebeugt, Rücken gerade.","Oberarm eng am Körper, parallel zum Boden.","Unterarm nach hinten strecken, bis der Arm gerade ist.","Kurz halten, langsam zurück. Dann Seite wechseln."],fehler:["Oberarm sackt nach unten.","Mit Schwung arbeiten."],tipp:"Leichtes Gewicht – hier zählt die saubere Streckung.",yt:"Trizeps Kickbacks Kurzhantel richtige Ausführung"},
+  kh_bank:{name:"Kurzhantel-Bankdrücken",art:"Kurzhanteln",p:["brust"],s:["schultern","trizeps"],sets:3,min:8,max:12,rest:120,inc:2,start:{kg:10,von:8,bis:12,wie:" je Hand"},std:[16,24,35,48,62],
+    how:["Mit den Hanteln auf den Oberschenkeln hinsetzen, beim Hinlegen mitnehmen.","Füße fest am Boden, Schulterblätter zusammen.","Hanteln über der Brust nach oben drücken.","Langsam bis auf Brusthöhe ablassen."],fehler:["Ellbogen 90° zur Seite.","Hanteln unten fallen lassen."],tipp:"Zum Aufhören Hanteln zur Brust, Knie hoch und aufsetzen – nicht seitlich fallen lassen.",yt:"Kurzhantel Bankdrücken richtige Ausführung"},
+  brustpresse:{name:"Brustpresse",art:"Maschine",p:["brust"],s:["schultern","trizeps"],sets:3,min:8,max:12,rest:120,inc:2.5,start:{kg:20,von:20,bis:30,wie:""},std:[33,53,80,112,147],
+    how:["Sitz so einstellen, dass die Griffe auf Höhe der Brustmitte sind.","Schulterblätter nach hinten-unten, Brust raus.","Griffe nach vorne drücken, Arme nicht ganz durchstrecken.","Langsam zurück, bis du eine Dehnung in der Brust spürst."],fehler:["Schultern hochziehen.","Gewicht zurückfallen lassen."],tipp:"Erst die Maschine einstellen, dann das Gewicht wählen.",yt:"Brustpresse Maschine richtige Ausführung"},
+  butterfly:{name:"Butterfly",art:"Maschine",p:["brust"],s:[],sets:3,min:12,max:15,rest:90,inc:2.5,start:{kg:20,von:15,bis:30,wie:""},std:[36,55,79,107,139],
+    how:["Sitz so einstellen, dass die Griffe auf Brusthöhe sind.","Arme leicht gebeugt lassen.","Griffe vor der Brust zusammenführen.","Langsam öffnen, bis du Dehnung spürst – nicht weiter."],fehler:["Arme ganz gestreckt.","Zu weit nach hinten öffnen."],tipp:"Stell dir vor, du umarmst einen Baum.",yt:"Butterfly Maschine richtige Ausführung"},
+  latziehen:{name:"Latziehen",art:"Kabelzug",p:["lat"],s:["bizeps","oben"],sets:3,min:8,max:12,rest:120,inc:2.5,start:{kg:25,von:25,bis:35,wie:""},std:[42,57,77,99,123],
+    how:["Oberschenkel unter das Polster klemmen.","Stange etwas breiter als schulterbreit greifen.","Brust raus, leicht nach hinten lehnen.","Stange zur oberen Brust ziehen, Ellbogen nach unten. Langsam zurück."],fehler:["Schwung mit dem Oberkörper.","Stange in den Nacken ziehen."],tipp:"Denk an „Ellbogen in die Hosentaschen“.",yt:"Latziehen richtige Ausführung"},
+  kabelrudern:{name:"Rudern am Kabel",art:"Kabelzug",p:["oben","lat"],s:["bizeps"],sets:3,min:10,max:12,rest:120,inc:2.5,start:{kg:25,von:25,bis:35,wie:""},std:[40,57,78,102,128],
+    how:["Aufrecht sitzen, Füße auf den Stützen, Knie leicht gebeugt.","Griff zum Bauch ziehen, Ellbogen nah am Körper.","Schulterblätter am Ende zusammendrücken.","Kontrolliert nach vorne lassen."],fehler:["Weit nach hinten lehnen.","Runder Rücken."],tipp:"Der Oberkörper bleibt fast ruhig.",yt:"Rudern am Kabel sitzend richtige Ausführung"},
+  kh_rudern:{name:"Einarmiges Kurzhantel-Rudern",art:"Kurzhantel",p:["lat"],s:["oben"],sets:3,min:10,max:12,rest:90,inc:2,jeSeite:true,start:{kg:12,von:10,bis:14,wie:" (eine Hantel)"},std:[16,25,38,53,69],
+    how:["Eine Hand und ein Knie auf die Bank, Rücken gerade wie ein Tisch.","Hantel Richtung Hüfte ziehen, Ellbogen nah am Körper.","Langsam ablassen.","Erst alle Wdh. mit einem Arm, dann Seite wechseln."],fehler:["Oberkörper dreht mit auf.","Runder Rücken."],tipp:"Trag die Wdh. für eine Seite ein – beide Seiten gleich viele.",yt:"Einarmiges Kurzhantelrudern richtige Ausführung"},
+  goblet:{name:"Goblet Squat",art:"Kurzhantel",p:["quadrizeps"],s:["po"],sets:2,min:8,max:12,rest:120,inc:2,start:{kg:12,von:10,bis:16,wie:" (eine Hantel)"},std:[13,24,38,55,75],
+    how:["Eine Kurzhantel senkrecht vor der Brust halten.","Füße schulterbreit, Zehen leicht nach außen.","Hüfte nach hinten-unten, so tief wie sauber möglich.","Brust bleibt oben, durch die ganze Fußsohle hochdrücken."],fehler:["Fersen heben ab.","Knie fallen nach innen."],tipp:"Ideal, um die Kniebeuge zu lernen.",yt:"Goblet Squat richtige Ausführung"},
+  beinpresse:{name:"Beinpresse",art:"Maschine",p:["quadrizeps"],s:["po"],sets:2,min:10,max:12,rest:120,inc:5,start:{kg:40,von:40,bis:60,wie:""},std:[90,139,202,277,359],
+    how:["Rücken und Po fest ans Polster.","Füße schulterbreit mittig auf die Platte.","Langsam ablassen, bis die Knie ca. 90° gebeugt sind.","Über die ganze Fußsohle zurückdrücken."],fehler:["Knie oben ganz durchdrücken.","Po rollt unten vom Polster weg."],tipp:"Die Knie zeigen immer in Richtung Zehen.",yt:"Beinpresse richtige Ausführung"},
+  beinstrecker:{name:"Beinstrecker",art:"Maschine",p:["quadrizeps"],s:[],sets:2,min:12,max:15,rest:90,inc:2.5,start:{kg:20,von:20,bis:30,wie:""},std:[42,65,95,130,169],
+    how:["Knie auf Höhe des Drehpunkts, Polster vorne über dem Sprunggelenk.","Beine nach oben strecken, oben 1 Sek. halten.","Langsam ablassen."],fehler:["Mit Schwung hochkicken.","Po hebt vom Sitz ab."],tipp:"An den Griffen festhalten, dann bleibt der Po unten.",yt:"Beinstrecker richtige Ausführung"},
+  rdl:{name:"Rumänisches Kreuzheben",art:"Kurzhanteln",p:["beinbeuger","po"],s:["unten"],sets:2,min:8,max:12,rest:120,inc:2,start:{kg:10,von:8,bis:14,wie:" je Hand"},std:[16,26,39,55,72],
+    how:["Hüftbreit stehen, Hanteln vor den Oberschenkeln, Knie leicht gebeugt.","Po nach hinten schieben, Oberkörper kippt nach vorne.","Runter, bis du hinten im Oberschenkel Zug spürst.","Hüfte nach vorne schieben und aufrichten."],fehler:["Runder Rücken – Rücken bleibt immer gerade!","Kniebeuge statt Hüftbewegung."],tipp:"Technik vor Gewicht. Lass im Studio kurz einen Trainer drüberschauen.",yt:"Rumänisches Kreuzheben Kurzhantel richtige Ausführung"},
+  hip_thrust:{name:"Hip Thrust",art:"Langhantel oder Maschine",p:["po"],s:["beinbeuger"],sets:2,min:10,max:15,rest:120,inc:5,start:{kg:30,von:20,bis:40,wie:""},std:[45,80,129,189,257],
+    how:["Oberer Rücken an die Bankkante, Füße hüftbreit aufstellen.","Stange mit Polster quer über die Hüfte legen (oder den Gurt der Maschine).","Hüfte hochdrücken, bis Schultern, Hüfte und Knie eine Linie bilden.","Oben den Po anspannen, langsam ablassen."],fehler:["Hohlkreuz oben.","Füße zu weit weg."],tipp:"Die leere Stange (20 kg) reicht am Anfang. Immer mit Polster.",yt:"Hip Thrust Langhantel richtige Ausführung"},
+  beinbeuger:{name:"Beinbeuger sitzend",art:"Maschine",p:["beinbeuger"],s:[],sets:2,min:10,max:15,rest:90,inc:2.5,start:{kg:15,von:15,bis:25,wie:""},std:[34,52,76,103,134],
+    how:["Knie auf Höhe des Drehpunkts der Maschine.","Unteres Polster knapp über der Ferse, oberes fest auf den Oberschenkeln.","Beine nach unten-hinten beugen, kurz halten.","Langsam zurück."],fehler:["Mit Schwung arbeiten.","Gewicht zurückschnellen lassen."],tipp:"Die langsame Rückbewegung ist hier besonders wirksam.",yt:"Beinbeuger sitzend richtige Ausführung"},
+  kabelcrunch:{name:"Kabel-Crunch kniend",art:"Kabelzug (Seil)",p:["bauch"],s:[],sets:2,min:10,max:15,rest:90,inc:2.5,start:{kg:20,von:15,bis:25,wie:""},std:[22,39,62,90,122],
+    how:["Seil am oberen Kabelzug, davor knien.","Seil-Enden neben dem Kopf halten.","Oberkörper einrollen – Brust Richtung Becken.","Langsam zurück."],fehler:["Mit den Armen ziehen.","Hüfte bewegt sich mit."],tipp:"Stell dir vor, du rollst dich ein wie eine Schnecke.",yt:"Kabel Crunch kniend richtige Ausführung"},
+  knieheben:{name:"Knieheben am Stützgerät",art:"Körpergewicht",p:["bauch"],s:[],sets:2,min:10,max:15,rest:90,inc:0,koerper:true,std:[1,9,21,35,51],
+    how:["Unterarme auf die Polster, Rücken an die Lehne.","Beine hängen locker.","Knie bis mindestens Hüfthöhe hochziehen.","Langsam ablassen – nicht schwingen."],fehler:["Schwung holen.","Nur die Beine heben statt den Bauch anzuspannen."],tipp:"Zu schwer? Erst bis halbe Höhe. Zu leicht? Beine gestreckt heben.",yt:"Knieheben Captains Chair richtige Ausführung"},
+  plank:{name:"Unterarmstütz (Plank)",art:"Körpergewicht",p:["bauch"],s:[],sets:2,min:20,max:45,rest:60,inc:5,zeit:true,std:[20,40,60,90,120],eigen:true,
+    how:["Unterarme unter die Schultern, Füße hüftbreit.","Körper ist eine gerade Linie von Kopf bis Ferse.","Bauch und Po anspannen, ruhig atmen."],fehler:["Hohlkreuz.","Po zu weit oben."],tipp:"Lieber 20 Sek. sauber als 60 Sek. mit Hohlkreuz.",yt:"Unterarmstütz Plank richtige Ausführung"}
+};
+
+/* ---------- Trainingstage: Muskelbereiche mit je 3 Übungen ---------- */
+const PLAN = {
+  A:{name:"Arme & Schultern",tag:"Mittwoch",areas:[{n:"Schultern",ex:["schulterdruecken","seitheben","reverse_fly"]},{n:"Bizeps",ex:["curls","hammercurls","kabelcurls"]},{n:"Trizeps",ex:["trizeps","ueberkopf_trizeps","kickbacks"]}]},
+  B:{name:"Brust & Rücken",tag:"Freitag",areas:[{n:"Brust",ex:["kh_bank","brustpresse","butterfly"]},{n:"Rücken",ex:["latziehen","kabelrudern","kh_rudern"]}]},
+  C:{name:"Beine & Bauch",tag:"Samstag",areas:[{n:"Beine vorne",ex:["goblet","beinpresse","beinstrecker"]},{n:"Po & Beine hinten",ex:["rdl","hip_thrust","beinbeuger"]},{n:"Bauch",ex:["kabelcrunch","knieheben","plank"]}]}
+};
+const DAYS = {3:"A",5:"B",6:"C"};
+const planEx = p => PLAN[p].areas.flatMap(a => a.ex);
+const areaOf = (p, id) => (PLAN[p].areas.find(a => a.ex.includes(id)) || {}).n || "";
+const MUSCLES = {brust:"Brust",schultern:"Schultern",bizeps:"Bizeps",trizeps:"Trizeps",bauch:"Bauch",lat:"Breiter Rücken",oben:"Oberer Rücken",unten:"Unterer Rücken",po:"Po",quadrizeps:"Beine vorne",beinbeuger:"Beine hinten"};
+
+/* ---------- Dehnplan: jeden Tag (nichts eintragen, nur machen) ---------- */
+const STRETCH = {
+  fusskreisen:{name:"Fuß kreisen",dose:"10× je Richtung, je Fuß",min:1.5,how:["Hinsetzen, ein Bein leicht anheben.","Mit dem Fuß langsam große Kreise malen.","10× in jede Richtung, dann Fuß wechseln."]},
+  wade_gerade:{name:"Wade dehnen (Bein gestreckt)",dose:"2 × 30 Sek. je Seite",min:2,how:["Hände an die Wand, ein Bein weit nach hinten.","Hinteres Bein gestreckt, Ferse bleibt am Boden, Fußspitze zeigt nach vorne.","Hüfte langsam Richtung Wand schieben, bis die Wade zieht.","Ruhig atmen, nicht wippen."]},
+  wade_gebeugt:{name:"Wade dehnen (Knie gebeugt)",dose:"2 × 30 Sek. je Seite",min:2,how:["Wie oben, aber den hinteren Fuß etwas näher stellen.","Hinteres Knie beugen, Ferse bleibt unten.","Der Zug sitzt jetzt tiefer, Richtung Ferse."]},
+  handtuch:{name:"Fußsohle & Wade mit Handtuch",dose:"2 × 30 Sek. je Seite",min:2,how:["Auf den Boden setzen, Bein gestreckt.","Handtuch um den vorderen Fuß legen, Enden festhalten.","Fußspitze sanft zu dir ziehen, bis Wade und Fußsohle ziehen."]},
+  oberschenkel_vorne:{name:"Oberschenkel vorne dehnen",dose:"2 × 30 Sek. je Seite",min:2,how:["Mit einer Hand an der Wand festhalten.","Fuß hinten greifen, Ferse Richtung Po ziehen.","Knie zeigen nach unten, Hüfte leicht nach vorne."]},
+  oberschenkel_hinten:{name:"Oberschenkel hinten dehnen",dose:"2 × 30 Sek. je Seite",min:2,how:["Ferse auf eine niedrige Erhöhung, Bein gestreckt, Zehen zeigen hoch.","Mit geradem Rücken aus der Hüfte nach vorne lehnen.","Halten, wenn es hinten im Oberschenkel zieht."]},
+  brust_dehnen:{name:"Brust dehnen am Türrahmen",dose:"2 × 30 Sek. je Seite",min:2,how:["Unterarm an einen Türrahmen oder eine Wandkante legen, Ellbogen etwa auf Schulterhöhe.","Einen kleinen Schritt nach vorne machen.","Oberkörper leicht nach vorne lehnen, bis die Brust zieht."]},
+  schulter_dehnen:{name:"Schulter dehnen",dose:"2 × 30 Sek. je Seite",min:2,how:["Einen Arm gestreckt vor der Brust zur anderen Seite führen.","Mit der anderen Hand am Oberarm sanft heranziehen.","Schultern locker unten lassen."]},
+  trizeps_dehnen:{name:"Trizeps dehnen",dose:"2 × 30 Sek. je Seite",min:2,how:["Einen Arm hochnehmen, Ellbogen beugen, Hand hinter den Kopf.","Mit der anderen Hand den Ellbogen sanft nach hinten drücken.","Kopf gerade lassen, ruhig atmen."]},
+  ruecken_dehnen:{name:"Rücken dehnen (Kindhaltung)",dose:"2 × 30 Sek.",min:1.5,how:["Knien, Po Richtung Fersen setzen.","Oberkörper nach vorne ablegen, Arme weit nach vorne strecken.","Ruhig in den Rücken atmen.","Drückt es am Fuß? Kissen unter die Füße legen oder auslassen."]}
+};
+const FUSS = ["fusskreisen", "wade_gerade", "wade_gebeugt", "handtuch"];        // jeden Tag
+const EXTRA = {1:["oberschenkel_vorne","oberschenkel_hinten"], 2:["brust_dehnen","schulter_dehnen"], 3:["schulter_dehnen","trizeps_dehnen"], 4:["ruecken_dehnen","oberschenkel_hinten"], 5:["brust_dehnen","ruecken_dehnen"], 6:["oberschenkel_vorne","oberschenkel_hinten"], 0:["ruecken_dehnen","oberschenkel_vorne"]};
+const WD = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+const WD_LONG = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+
+/* ---------- Abzeichen für Gym-Besuche (eigene Idee) ---------- */
+const BADGES = [{n:1,t:"Erster Schritt"},{n:5,t:"Dranbleiber"},{n:10,t:"Stammgast"},{n:25,t:"Eisen-Fan"},{n:50,t:"Gym-Ratte"},{n:100,t:"Legende"}];
+
+/* ---------- Helfer ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2, "0");
+const keyOf = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+const parseKey = k => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (k, n) => { const d = parseKey(k); d.setDate(d.getDate() + n); return keyOf(d); };
+const diffDays = (a, b) => Math.round((parseKey(b) - parseKey(a)) / 86400000);
+const todayKey = () => keyOf(new Date());
+const mondayOf = k => addDays(k, -((parseKey(k).getDay() + 6) % 7));
+const fmtDate = (k, o) => parseKey(k).toLocaleDateString("de-DE", o || {weekday:"short", day:"2-digit", month:"2-digit"});
+const fmtNum = v => Number(v).toLocaleString("de-DE", {maximumFractionDigits: 1});
+const num = v => { if (v === null || v === undefined || v === "") return null; const n = parseFloat(String(v).replace(",", ".")); return isFinite(n) ? n : null; };
+const clone = o => JSON.parse(JSON.stringify(o));
+const mmss = s => Math.floor(s / 60) + ":" + pad(s % 60);
+const noKg = ex => !!(ex.zeit || ex.koerper);
+const startTxt = id => { const e = EX[id]; if (e.zeit) return "Start 20–30 Sek."; if (e.koerper) return "Körpergewicht"; return "Start ca. " + fmtNum(e.start.kg) + " kg" + e.start.wie; };
+const vidHtml = (id, label) => { const src = vidSrc(id); return '<div class="vid-box">' + (src ? '<video src="' + esc(src) + '" autoplay loop muted playsinline preload="auto" aria-label="' + esc(label) + '"></video>' : '<div class="vid-none">Video lädt nicht – schau unten in die Anleitung.</div>') + '</div>'; };
+
+/* ---------- Zustand & Speichern ---------- */
+const LS_KEY = "hantelbuch.v1";
+function freshState() {
+  return {settings:{startDate:PLAN_START, height:180, v3:true}, body:{entries:[{d:"2026-10-28", kg:70, arm:null, waist:null}]}, photos:{items:[]}, stretch:{custom:[], log:{}}, workouts:{}};
+}
+let S = freshState();
+const UI = {month:null, pick:null, step:null, chartEx:null, confirm:null, needRender:false, sheet:null, wtOpen:false, dday:null, flash:null, seen:{}};
+// Einmalig: Plan auf Montag, 2.11. verschieben, wenn vorher noch nichts trainiert wurde
+function migrate() {
+  if (!S.stretch) S.stretch = {custom:[], log:{}};
+  if (!S.stretch.custom) S.stretch.custom = [];
+  if (S.settings && !S.settings.v3) {
+    const early = Object.values(S.workouts).some(w => w.date < PLAN_START && (hasLogged(w) || w.status === "done" || w.status === "manual"));
+    if (!early && S.settings.startDate < PLAN_START) S.settings.startDate = PLAN_START;
+    S.settings.v3 = true; changed("settings");
+  }
+}
+function loadLocal() { try { const o = JSON.parse(localStorage.getItem(LS_KEY) || "null"); if (o && o.settings && o.workouts) S = Object.assign(freshState(), o); } catch (e) {} }
+function saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (e) {} }
+
+let COL = null, uploadedOnce = false;
+const pending = {};
+const SINGLE = ["settings", "body", "photos", "stretch"];
+function allKeys() { return SINGLE.concat(Object.keys(S.workouts).map(d => "w-" + d)); }
+function docBody(k) { if (SINGLE.includes(k)) return S[k]; if (k.startsWith("w-")) return S.workouts[k.slice(2)]; }
+function setDocLocal(k, d) { if (SINGLE.includes(k)) S[k] = d; else if (k.startsWith("w-")) S.workouts[k.slice(2)] = d; }
+function busy(k) { const p = pending[k]; return !!(p && (p.timer || Date.now() - p.dirtyAt < 4000)); }
+// Änderung merken: sofort auf dem Gerät, kurz danach gebündelt ins Claude-Konto
+function changed(k) {
+  saveLocal();
+  if (!COL) return;
+  const p = pending[k] || (pending[k] = {timer:null, chain:Promise.resolve(), dirtyAt:0});
+  p.dirtyAt = Date.now(); clearTimeout(p.timer); p.timer = setTimeout(() => flush(k), 700); setSync("busy");
+}
+function flush(k) {
+  const p = pending[k]; if (!p) return; p.timer = null;
+  p.chain = p.chain.then(async () => {
+    if (!COL) return;
+    const b = docBody(k);
+    try { if (b === undefined) await COL.doc(k).delete(); else await COL.doc(k).set(clone(b)); if (!Object.values(pending).some(x => x.timer)) setSync("cloud"); }
+    catch (e) { if (e && e.code === "quota_exceeded") toast("Speicher voll"); if (e && (e.code === "revoked" || e.code === "not_granted")) COL = null; setSync("local"); }
+  });
+}
+async function initCloud() {
+  try {
+    if (!IN_CLAUDE) { setSync("local"); return; }
+    const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+    if (!db || !user) { setSync("local"); return; }
+    const uid = await user.id(); if (!uid) { setSync("local"); return; }
+    COL = db.collection("data/users/" + uid);
+    COL.onSnapshot(applySnap, () => { COL = null; setSync("local"); });
+  } catch (e) { setSync("local"); }
+}
+function applySnap(snap) {
+  const seen = new Set();
+  for (const d of snap.docs) { seen.add(d.id); if (busy(d.id)) continue; const data = d.data(); if (data) setDocLocal(d.id, clone(data)); }
+  for (const ch of snap.docChanges()) if (ch.type === "removed" && !busy(ch.doc.id) && ch.doc.id.startsWith("w-")) delete S.workouts[ch.doc.id.slice(2)];
+  if (!uploadedOnce && !snap.metadata.fromCache) { uploadedOnce = true; for (const k of allKeys()) if (!seen.has(k)) changed(k); migrate(); }
+  saveLocal(); if (!Object.values(pending).some(x => x.timer)) setSync("cloud"); softRender();
+}
+function setSync(m) { const el = $("#sync"); el.className = "sync " + m; el.querySelector("span").textContent = m === "cloud" ? "Gespeichert" : m === "busy" ? "Speichert…" : "Auf diesem Gerät"; el.title = m === "local" ? "Daten liegen auf diesem Gerät" : "Daten liegen privat in deinem Claude-Konto"; }
+
+/* ---------- Trainingslogik ---------- */
+const start = () => S.settings.startDate || PLAN_START;
+const isPlanned = k => k >= start() && DAYS[parseKey(k).getDay()] !== undefined;
+function weekNo(k) { return Math.floor(diffDays(start(), k) / 7) + 1; }
+function einstieg(k) { return weekNo(k) <= 2; }
+function setsFor(id, k) { return einstieg(k) ? Math.min(2, EX[id].sets) : EX[id].sets; }
+function okSets(w, id) { return ((w && w.ex && w.ex[id]) || []).filter(s => s && s.ok && num(s.r) > 0); }
+function hasLogged(w) { return !!w && !!w.ex && Object.keys(w.ex).some(id => okSets(w, id).length > 0); }
+function planOf(k) { const w = S.workouts[k]; return (w && w.plan) || (isPlanned(k) ? DAYS[parseKey(k).getDay()] : null); }
+function todayPlan() { const t = todayKey(), w = S.workouts[t]; return (w && w.plan) || UI.pick || (isPlanned(t) ? DAYS[parseKey(t).getDay()] : null); }
+function ensureWorkout(k, plan) { let w = S.workouts[k]; if (!w) w = S.workouts[k] = {date:k, plan, status:"draft", ex:{}, note:"", feel:0}; if (!w.ex) w.ex = {}; return w; }
+function history(id, beforeK) { return Object.values(S.workouts).filter(w => w.date < beforeK && okSets(w, id).length).sort((a, b) => a.date < b.date ? 1 : -1); }
+const e1rm = (kg, r) => kg * (1 + r / 30);   // geschätztes Maximalgewicht (Epley-Formel)
+function score(id, kg, r) { return noKg(EX[id]) ? (r || 0) : (kg > 0 && r > 0 ? e1rm(kg, r) : 0); }
+function bestOf(w, id) { const ss = okSets(w, id); if (!ss.length) return null; const v = ss.map(s => score(id, num(s.kg) || 0, num(s.r))).filter(x => x > 0); return v.length ? Math.max(...v) : null; }
+function bestEver(id, beforeK) { const v = Object.values(S.workouts).filter(w => !beforeK || w.date < beforeK).map(w => bestOf(w, id)).filter(x => x != null); return v.length ? Math.max(...v) : null; }
+
+/* ---------- Level ---------- */
+function levelOf(id, sc) { let l = 0; EX[id].std.forEach((v, i) => { if (sc >= v) l = i + 1; }); return l; }
+const badge = l => '<span class="lv">' + LV[l].e + ' ' + LV[l].n + '</span>';
+const badgeTxt = l => LV[l].e + " " + LV[l].n;
+// Gewicht, das für Level l bei r Wdh. nötig ist (auf die nächste Stufe aufgerundet)
+function needKg(id, l, r) { const ex = EX[id], inc = ex.inc || 1, kg = ex.std[l - 1] / (1 + r / 30); return Math.max(inc, Math.ceil(kg / inc - 1e-9) * inc); }
+function meter(l) { return '<div class="meter" aria-hidden="true">' + LV.map((x, i) => '<span class="' + (i <= l ? "on" : "") + (i === l ? " cur" : "") + '"><i></i>' + x.n + '</span>').join("") + '</div>'; }
+
+/* ---------- Vorschlag fürs heutige Gewicht (doppelte Progression) ---------- */
+function suggest(id, k) {
+  const ex = EX[id], h = history(id, k), unit = ex.zeit ? " Sek." : " Wdh.";
+  if (!h.length) {
+    if (ex.zeit) return {kg:null, text:"<b>Erstes Mal:</b> 20–30 Sek. halten, so lange es sauber geht."};
+    if (ex.koerper) return {kg:null, text:"<b>Erstes Mal:</b> So viele saubere Wdh. wie möglich, Ziel " + ex.min + "–" + ex.max + "."};
+    return {kg:ex.start.kg, text:"<b>Startgewicht:</b> ca. " + fmtNum(ex.start.kg) + " kg" + ex.start.wie + " (Richtwert " + fmtNum(ex.start.von) + "–" + fmtNum(ex.start.bis) + " kg). 1. Satz = Testsatz: mehr als " + (ex.max + 3) + " Wdh. locker → schwerer, keine " + ex.min + " → leichter."};
+  }
+  const ss = okSets(h[0], id), reps = ss.map(s => num(s.r)), allTop = reps.every(r => r >= ex.max), below = reps.filter(r => r < ex.min).length;
+  if (noKg(ex)) return allTop ? {kg:null, text:"<b>Stark!</b> Alle Sätze ≥ " + ex.max + unit + " → heute schwerer machen (" + (ex.zeit ? "5 Sek. länger" : "langsamer oder Beine gestreckt") + ")."} : {kg:null, text:"<b>Ziel:</b> etwas mehr als letztes Mal."};
+  const kg = Math.max(...ss.map(s => num(s.kg) || 0)), side = ex.jeSeite ? " je Seite" : "";
+  if (allTop) return {kg:+(kg + ex.inc).toFixed(1), text:"<b>Mehr Gewicht!</b> Letztes Mal alle Sätze " + ex.max + "+ Wdh. Heute ca. " + fmtNum(kg + ex.inc) + " kg, Ziel " + ex.min + "+ Wdh." + side};
+  if (below >= 2) return {kg:Math.max(0, +(kg - ex.inc).toFixed(1)), text:"<b>Etwas leichter:</b> Heute ca. " + fmtNum(Math.max(0, kg - ex.inc)) + " kg und sauber arbeiten."};
+  if (below === 1) return {kg, text:"<b>Gewicht halten:</b> " + fmtNum(kg) + " kg – alle Sätze in " + ex.min + "–" + ex.max + " Wdh. bringen."};
+  return {kg, text:"<b>Gleiches Gewicht:</b> " + fmtNum(kg) + " kg – pro Satz 1 Wdh. mehr als letztes Mal." + side};
+}
+function curKg(id, t) { const w = S.workouts[t]; if (w && w.wt && w.wt[id] != null) return w.wt[id]; const sg = suggest(id, t); return sg.kg != null ? sg.kg : (EX[id].start ? EX[id].start.kg : 0); }
+function refReps(id, t) { const ss = okSets(S.workouts[t], id); if (ss.length) return Math.max(...ss.map(s => num(s.r))); const e = EX[id]; return Math.round((e.min + e.max) / 2); }
+function lvBox(id, t) {
+  const ex = EX[id], kg = curKg(id, t), r = refReps(id, t), l = levelOf(id, score(id, kg, r));
+  const next = l >= 5 ? "Höchstes Level – du bist eine Legende! 👑" : "Für " + badgeTxt(l + 1) + ": ca. " + fmtNum(needKg(id, l + 1, r)) + " kg × " + r + " Wdh.";
+  return meter(l) + '<p class="small">Mit <b>' + fmtNum(kg) + ' kg × ' + r + ' Wdh.</b> bist du: <b>' + badgeTxt(l) + '</b>. ' + next + '</p>';
+}
+
+/* ---------- Status, Statistik ---------- */
+function dayStatus(k) {
+  const w = S.workouts[k], t = todayKey();
+  if (w) { if (w.status === "done" || w.status === "manual") return "done"; if (w.status === "excused") return "excused"; if (w.status === "missed") return "missed"; if (hasLogged(w)) return k < t ? "done" : "draft"; }
+  if (!isPlanned(k)) return "";
+  return k < t ? "missed" : k === t ? "today" : "planned";
+}
+function stats() {
+  const t = todayKey(); let planned = 0, done = 0, total = 0, month = 0, streak = 0;
+  for (let k = addDays(t, -27); k <= t; k = addDays(k, 1)) { if (!isPlanned(k)) continue; const st = dayStatus(k); if (st === "excused" || (k === t && st !== "done")) continue; planned++; if (st === "done") done++; }
+  for (const k of Object.keys(S.workouts)) if (dayStatus(k) === "done") { total++; if (k.slice(0, 7) === t.slice(0, 7)) month++; }
+  for (let k = t; k >= start(); k = addDays(k, -1)) { if (!isPlanned(k)) continue; const st = dayStatus(k); if (k === t && st !== "done") continue; if (st === "done") streak++; else if (st === "excused") continue; else break; }
+  return {quote: planned ? Math.round(done / planned * 100) : null, total, month, streak};
+}
+// Was ist als Nächstes dran?
+function nextUp() {
+  const t = todayKey(), w = S.workouts[t], tp = todayPlan();
+  if (tp && !(w && ["done", "manual", "excused", "missed"].includes(w.status))) return {k:t, plan:tp, today:true};
+  for (let i = 1; i <= 21; i++) { const k = addDays(t, i); if (isPlanned(k)) return {k, plan:DAYS[parseKey(k).getDay()], today:false}; }
+  return null;
+}
+function minutes(p, k) { let s = 6 * 60; planEx(p).forEach(id => { const n = setsFor(id, k) * (EX[id].jeSeite ? 2 : 1); s += n * 45 + (n - 1) * EX[id].rest + 90; }); return Math.round(s / 300) * 5; }
+function weekSets() {
+  const t = todayKey(), o = {}; for (const m in MUSCLES) o[m] = 0;
+  for (const w of Object.values(S.workouts)) { const d = diffDays(w.date, t); if (d < 0 || d > 6 || !w.ex) continue;
+    for (const id in w.ex) { if (!EX[id]) continue; const n = okSets(w, id).length; EX[id].p.forEach(m => { if (m in o) o[m] += n; }); EX[id].s.forEach(m => { if (m in o) o[m] += n / 2; }); } }
+  return o;
+}
+const level4 = x => x <= 0 ? 0 : x < 4 ? 1 : x <= 10 ? 2 : 3;
+
+/* ---------- Grafiken ---------- */
+function bodyMap(lv) {
+  const f = m => "var(--" + ["muscle", "heat1", "heat2", "heat3"][lv[m] || 0] + ")", t = m => "<title>" + (MUSCLES[m] || "") + "</title>";
+  const base = '<g fill="var(--soft)" stroke="var(--line)" stroke-width="1"><circle cx="60" cy="20" r="12"/><rect x="54" y="30" width="12" height="11"/><path d="M38 42 Q60 36 82 42 L80 118 Q60 124 40 118 Z"/><path d="M40 116 L80 116 L82 140 L38 140 Z"/><rect x="21" y="46" width="13" height="48" rx="6"/><rect x="86" y="46" width="13" height="48" rx="6"/><rect x="18" y="94" width="12" height="44" rx="6"/><rect x="90" y="94" width="12" height="44" rx="6"/><rect x="39" y="138" width="20" height="64" rx="9"/><rect x="61" y="138" width="20" height="64" rx="9"/><rect x="41" y="202" width="16" height="50" rx="7"/><rect x="63" y="202" width="16" height="50" rx="7"/></g>';
+  const st = 'stroke="var(--bg)" stroke-width="1.5"', g = (m, inner) => '<g fill="' + f(m) + '" ' + st + '>' + t(m) + inner + '</g>';
+  const sh = g("schultern", '<ellipse cx="31" cy="50" rx="9" ry="8"/><ellipse cx="89" cy="50" rx="9" ry="8"/>');
+  const front = base + sh + g("brust", '<rect x="41" y="47" width="18" height="23" rx="6"/><rect x="61" y="47" width="18" height="23" rx="6"/>') + g("bizeps", '<ellipse cx="27.5" cy="72" rx="5.5" ry="15"/><ellipse cx="92.5" cy="72" rx="5.5" ry="15"/>') + g("bauch", '<rect x="48" y="74" width="24" height="42" rx="6"/>') + g("quadrizeps", '<ellipse cx="49" cy="170" rx="8.5" ry="27"/><ellipse cx="71" cy="170" rx="8.5" ry="27"/>');
+  const back = base + sh + g("oben", '<path d="M46 42 L74 42 L69 70 L60 78 L51 70 Z"/>') + g("lat", '<path d="M41 58 L52 74 L55 104 L44 98 Z"/><path d="M79 58 L68 74 L65 104 L76 98 Z"/>') + g("unten", '<rect x="53" y="90" width="14" height="26" rx="5"/>') + g("trizeps", '<ellipse cx="27.5" cy="74" rx="5.5" ry="15"/><ellipse cx="92.5" cy="74" rx="5.5" ry="15"/>') + g("po", '<ellipse cx="50" cy="128" rx="10" ry="10"/><ellipse cx="70" cy="128" rx="10" ry="10"/>') + g("beinbeuger", '<ellipse cx="49" cy="172" rx="8.5" ry="25"/><ellipse cx="71" cy="172" rx="8.5" ry="25"/>');
+  return '<svg viewBox="0 0 250 272" role="img" aria-label="Muskel-Karte"><g>' + front + '</g><g transform="translate(130 0)">' + back + '</g><text x="60" y="268" text-anchor="middle" font-size="12" fill="var(--muted)">vorne</text><text x="190" y="268" text-anchor="middle" font-size="12" fill="var(--muted)">hinten</text></svg>';
+}
+function niceTicks(min, max, n) {
+  if (min === max) { const p = Math.max(1, Math.abs(min) * 0.05); min -= p; max += p; }
+  const raw = (max - min) / n, mag = Math.pow(10, Math.floor(Math.log10(raw))), e = raw / mag, step = (e >= 7.5 ? 10 : e >= 3.5 ? 5 : e >= 1.5 ? 2 : 1) * mag;
+  const lo = Math.floor(min / step) * step, hi = Math.ceil(max / step) * step, out = []; for (let v = lo; v <= hi + step / 2; v += step) out.push(+v.toFixed(6)); return out;
+}
+function lineChart(pts, unit) {
+  if (!pts.length) return "";
+  const W = 320, H = 180, L = 42, R = 14, T = 14, B = 28, xs = pts.map(p => parseKey(p.d).getTime());
+  let x0 = Math.min(...xs), x1 = Math.max(...xs); if (x0 === x1) { x0 -= 3 * 864e5; x1 += 3 * 864e5; }
+  const tk = niceTicks(Math.min(...pts.map(p => p.y)), Math.max(...pts.map(p => p.y)), 4), y0 = tk[0], y1 = tk[tk.length - 1];
+  const X = x => L + (x - x0) / (x1 - x0) * (W - L - R), Y = y => T + (1 - (y - y0) / (y1 - y0)) * (H - T - B);
+  let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Verlauf">';
+  tk.forEach(v => s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="var(--line)"/><text x="' + (L - 6) + '" y="' + (Y(v) + 4) + '" text-anchor="end" font-size="11" fill="var(--muted)">' + fmtNum(v) + '</text>');
+  const P = pts.map((p, i) => [X(xs[i]), Y(p.y)]);
+  if (P.length > 1) { const ln = P.map((q, i) => (i ? "L" : "M") + q[0].toFixed(1) + " " + q[1].toFixed(1)).join(" "); s += '<path d="' + ln + ' L' + P[P.length - 1][0].toFixed(1) + ' ' + Y(y0) + ' L' + P[0][0].toFixed(1) + ' ' + Y(y0) + ' Z" fill="var(--soft)"/><path d="' + ln + '" fill="none" stroke="var(--fg)" stroke-width="2.5" stroke-linejoin="round"/>'; }
+  P.forEach((q, i) => { const last = i === P.length - 1; s += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="' + (last ? 5 : 3) + '" fill="' + (last ? "var(--fg)" : "var(--bg)") + '" stroke="var(--fg)" stroke-width="2"/>'; });
+  const lp = P[P.length - 1];
+  s += '<text x="' + Math.min(lp[0], W - R) + '" y="' + Math.max(lp[1] - 10, 11) + '" text-anchor="end" font-size="12" font-weight="700" fill="var(--fg)">' + fmtNum(pts[pts.length - 1].y) + ' ' + unit + '</text><text x="' + L + '" y="' + (H - 8) + '" font-size="11" fill="var(--muted)">' + fmtDate(pts[0].d, {day:"2-digit", month:"2-digit"}) + '</text>';
+  if (pts.length > 1) s += '<text x="' + (W - R) + '" y="' + (H - 8) + '" text-anchor="end" font-size="11" fill="var(--muted)">' + fmtDate(pts[pts.length - 1].d, {day:"2-digit", month:"2-digit"}) + '</text>';
+  return s + "</svg>";
+}
+function weekRow(mon) {
+  const t = todayKey();
+  let s = '<div class="cal">'; ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].forEach(x => s += '<span class="wd">' + x + '</span>');
+  for (let i = 0; i < 7; i++) { const k = addDays(mon, i), st = dayStatus(k), p = isPlanned(k) ? DAYS[parseKey(k).getDay()] : null; s += '<button type="button" data-act="day" data-d="' + k + '" class="st-' + (st || "none") + (k === t ? " is-today" : "") + '">' + parseKey(k).getDate() + (st === "done" ? '<small>✓</small>' : p ? '<small>' + p + '</small>' : '') + '</button>'; }
+  return s + '</div>';
+}
+const X_ICON = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+
+/* ---------- Seite: START – nur das, was als Nächstes dran ist ---------- */
+function viewStart() {
+  const t = todayKey(), n = nextUp(), w = S.workouts[t], st = stats(), before = t < start();
+  let h = '<div class="stack"><p class="eyebrow">' + esc(fmtDate(t, {weekday:"long", day:"numeric", month:"long"})) + (before ? '' : ' · Woche ' + weekNo(t)) + '</p>';
+  if (n && n.today) {
+    const P = PLAN[n.plan];
+    h += '<div class="card ink"><p class="eyebrow">Heute dran</p><div class="day-head"><div class="plate">' + n.plan + '</div><div><h1>' + P.name + '</h1></div></div>'
+      + '<p class="muted">' + P.areas.map(a => a.n).join(" · ") + ' — ' + planEx(n.plan).length + ' Übungen · ca. ' + minutes(n.plan, t) + ' Min</p>'
+      + '<button class="btn primary block" data-act="start" data-p="' + n.plan + '">' + (hasLogged(w) ? "Weitermachen" : "Training starten") + '</button></div>';
+  } else {
+    if (dayStatus(t) === "done") h += '<div class="card"><h2>Heute erledigt ✓</h2><p class="muted">Stark! Gut essen und schlafen – da wachsen die Muskeln.</p></div>';
+    if (n) {
+      const P = PLAN[n.plan], days = diffDays(t, n.k);
+      h += '<div class="card ink"><p class="eyebrow">' + (before ? 'Dein Plan startet am ' + esc(fmtDate(start(), {weekday:"long", day:"numeric", month:"numeric"})) : 'Als Nächstes') + '</p>'
+        + (before ? '<div class="big-row"><span class="big">' + diffDays(t, start()) + '</span><span class="muted" style="padding-bottom:6px">' + (diffDays(t, start()) === 1 ? 'Tag' : 'Tage') + ' bis zum Start</span></div>' : '')
+        + '<p class="muted">' + (before ? 'Erstes Training: ' : '') + esc(fmtDate(n.k, {weekday:"long", day:"numeric", month:"numeric"})) + (days === 1 ? ' (morgen)' : '') + '</p>'
+        + '<div class="day-head"><div class="plate">' + n.plan + '</div><div><h1>' + P.name + '</h1></div></div>'
+        + '<button class="btn block" data-act="go" data-h="tag-' + n.plan.toLowerCase() + '">Übungen ansehen</button></div>';
+    }
+    if (!hasLogged(w)) h += '<p class="small muted">Heute trotzdem trainieren? ' + Object.keys(PLAN).map(p => '<button class="link" data-act="start" data-p="' + p + '">' + PLAN[p].name + '</button>').join(" · ") + '</p>';
+  }
+  // Zähler: wie oft warst du schon da?
+  h += '<button class="card" style="text-align:left" data-act="go" data-h="kalender"><p class="eyebrow">So oft warst du schon im Gym</p><div class="big-row"><span class="big">' + st.total + '×</span><span class="muted" style="padding-bottom:6px">Diesen Monat: ' + st.month + ' · Serie: ' + st.streak + '</span></div></button>';
+  h += '<div class="card"><h3>' + (before ? 'Deine erste Woche' : 'Diese Woche') + '</h3>' + weekRow(mondayOf(before ? start() : t)) + '</div></div>';
+  return h;
+}
+
+/* ---------- Seite: PLAN (alle Tage) ---------- */
+function viewPlan() {
+  let h = '<div class="stack"><div><p class="eyebrow">3er-Split · ab ' + esc(fmtDate(start(), {day:"numeric", month:"numeric"})) + '</p><h1>Dein Plan</h1></div><p class="muted">Jeder Tag hat eigene Muskeln. Pro Muskelbereich gibt es 3 Übungen. Tipp auf einen Tag.</p>';
+  for (const p of Object.keys(PLAN)) {
+    const P = PLAN[p];
+    h += '<button class="card" style="text-align:left" data-act="go" data-h="tag-' + p.toLowerCase() + '"><div class="day-head"><div class="plate">' + p + '</div><div><p class="eyebrow">' + P.tag + '</p><h2>' + P.name + '</h2></div></div>'
+      + '<div class="chips">' + P.areas.map(a => '<span class="chip">' + a.n + ' · 3</span>').join("") + '</div></button>';
+  }
+  return h + '<div class="card prose"><h3>So läuft jede Einheit</h3><ol><li>5–10 Min aufwärmen (Rad, Laufband).</li><li>Die App zeigt dir immer nur die aktuelle Übung mit Video.</li><li>Gewicht über den Pfeil einstellen, Wdh. eintragen, abhaken – der Pausen-Timer startet von selbst.</li><li>Aufhören, wenn noch 1–3 saubere Wdh. gehen würden.</li><li>Am Ende „Training abschließen“ – dann steht es im Kalender.</li></ol></div></div>';
+}
+
+/* ---------- Seite: TAG (Übungen eines Tages) ---------- */
+function viewTag(p) {
+  const P = PLAN[p], t = todayKey();
+  let h = '<div class="stack"><button class="link" data-act="go" data-h="plan">← Alle Tage</button><div class="day-head"><div class="plate">' + p + '</div><div><p class="eyebrow">' + P.tag + ' · ca. ' + minutes(p, addDays(start(), 21)) + ' Min</p><h1>' + P.name + '</h1></div></div>';
+  if (p === "C") h += '<div class="card note"><p class="small"><b>Verletzung am Fuß oder Bein?</b> Kläre mit deinem Physio, ab wann Übungen im Stehen (Goblet Squat, Kreuzheben) wieder gehen. Bis dahin lieber nur Maschinen im Sitzen.</p></div>';
+  P.areas.forEach(a => {
+    h += '<div class="card"><div class="area-h"><h3>' + a.n + '</h3><span class="small muted">3 Übungen</span></div><ul class="list">';
+    a.ex.forEach(id => { const e = EX[id]; h += '<li><button type="button" class="row" data-act="info" data-ex="' + id + '"><span><b>' + esc(e.name) + '</b><small>' + e.art + ' · ' + startTxt(id) + '</small></span><span class="num">' + setsFor(id, t) + '×' + e.min + '–' + e.max + (e.zeit ? "s" : "") + '</span></button></li>'; });
+    h += '</ul></div>';
+  });
+  return h + '<button class="btn primary block" data-act="start" data-p="' + p + '">Dieses Training starten</button></div>';
+}
+
+/* ---------- Seite: TRAINING – eine Übung nach der anderen ---------- */
+function firstOpen(p, t) { const w = S.workouts[t], l = planEx(p); const i = l.findIndex(id => okSets(w, id).length < setsFor(id, t)); return i < 0 ? l.length : i; }
+function progBar(p, t, step) { const w = S.workouts[t]; return '<div class="prog" aria-hidden="true">' + planEx(p).map((id, i) => '<i class="' + (okSets(w, id).length >= setsFor(id, t) ? "done" : i === step ? "now" : "") + '"></i>').join("") + '</div>'; }
+function setKgTxt(id, t, r) { const ex = EX[id]; if (noKg(ex)) return ex.zeit ? "Sek." : "Wdh."; return fmtNum(r && r.ok && r.kg != null ? r.kg : curKg(id, t)) + " kg ×"; }
+function viewTraining() {
+  const t = todayKey(), p = todayPlan();
+  if (!p) return '<div class="stack"><h1>Kein Training gewählt</h1><button class="btn primary" data-act="go" data-h="start">Zum Start</button></div>';
+  const list = planEx(p), w = S.workouts[t];
+  if (UI.step == null) UI.step = firstOpen(p, t);
+  UI.step = Math.max(0, Math.min(list.length, UI.step));
+  let h = '<div class="stack"><div class="tr-top"><button class="icon-btn" data-act="exit" aria-label="Training verlassen">' + X_ICON + '</button><div class="grow"><p class="eyebrow">' + PLAN[p].name + (UI.step < list.length ? ' · Übung ' + (UI.step + 1) + ' von ' + list.length : ' · Fertig') + '</p></div></div>' + progBar(p, t, UI.step);
+  if (UI.step >= list.length) {   // Zusammenfassung
+    h += '<h1>Geschafft?</h1><div class="card"><ul class="list">' + list.map((id, i) => { const n = okSets(w, id).length, need = setsFor(id, t); return '<li><button class="row" data-act="jump" data-i="' + i + '"><span><b>' + esc(EX[id].name) + '</b><small>' + areaOf(p, id) + '</small></span><span class="num">' + (n >= need ? "✓" : n + "/" + need) + '</span></button></li>'; }).join("") + '</ul></div>'
+      + '<div class="card"><h3>Wie war\'s?</h3><div class="feel">' + ["1 😫", "2 😕", "3 🙂", "4 💪", "5 🔥"].map((l, i) => '<button type="button" data-act="feel" data-v="' + (i + 1) + '" class="' + (w && w.feel === i + 1 ? "on" : "") + '">' + l + '</button>').join("") + '</div>'
+      + '<textarea id="note" placeholder="Notiz (z. B. Sitzhöhe Brustpresse 4)">' + esc(w ? w.note : "") + '</textarea></div>'
+      + '<div class="nav-row"><button class="btn" data-act="prev">←</button><button class="btn primary" data-act="finish">Training abschließen</button></div><p class="small muted">Danach steht der Tag im Kalender und zählt zu deinen Gym-Besuchen.</p></div>';
+    return h;
+  }
+  const id = list[UI.step], ex = EX[id], n = setsFor(id, t), rows = (w && w.ex && w.ex[id]) || [], hist = history(id, t), sg = suggest(id, t);
+  h += vidHtml(id, ex.name + " – Bewegung")
+    + '<div><p class="eyebrow">' + areaOf(p, id) + '</p><h1>' + esc(ex.name) + '</h1></div>'
+    + '<div class="chips"><span class="chip solid">' + n + ' × ' + ex.min + '–' + ex.max + (ex.zeit ? " Sek." : " Wdh.") + (ex.jeSeite ? " je Seite" : "") + '</span><span class="chip">Pause ' + mmss(ex.rest) + '</span></div>';
+  if (!noKg(ex)) {
+    // Gewicht einstellen: aufklappen mit dem Pfeil
+    const kg = curKg(id, t), l = levelOf(id, score(id, kg, refReps(id, t)));
+    h += '<details class="wt" id="wt"' + (UI.wtOpen ? " open" : "") + '><summary><span class="arr" aria-hidden="true">▸</span><span class="grow"><span class="eyebrow">Gewicht einstellen</span><span><b id="wtSum">' + fmtNum(kg) + ' kg</b> <span class="small muted">' + esc(ex.start.wie.trim()) + '</span></span></span><span id="lvSum">' + badge(l) + '</span></summary>'
+      + '<div class="wt-body"><div class="stepper"><button type="button" data-act="wt" data-d="-1" aria-label="Weniger Gewicht">−</button><input id="wtIn" inputmode="decimal" autocomplete="off" aria-label="Gewicht in kg" value="' + String(kg).replace(".", ",") + '"><span>kg</span><button type="button" data-act="wt" data-d="1" aria-label="Mehr Gewicht">+</button></div>'
+      + '<div id="lvBox">' + lvBox(id, t) + '</div><p class="hint small">' + sg.text + '</p></div></details>';
+  } else {
+    const best = bestOf(w, id) || bestEver(id, t) || 0, l = levelOf(id, best);
+    h += '<p class="hint">' + sg.text + '</p><div class="card"><div class="area-h"><h3>Dein Level</h3>' + badge(l) + '</div>' + meter(l) + '<p class="small muted">' + (l >= 5 ? "Höchstes Level!" : "Für " + badgeTxt(l + 1) + ": " + ex.std[l] + (ex.zeit ? " Sek." : " Wdh.") + " in einem Satz") + '</p></div>';
+  }
+  if (hist.length) h += '<p class="prev">Letztes Mal (' + esc(fmtDate(hist[0].date)) + '): ' + okSets(hist[0], id).map(s => noKg(ex) ? num(s.r) + (ex.zeit ? " s" : " Wdh.") : fmtNum(num(s.kg) || 0) + " × " + num(s.r)).join(" · ") + '</p>';
+  h += '<section class="ex" data-ex="' + id + '"><div class="sets"><div class="set-h"><span>Satz</span><span></span><span>' + (ex.zeit ? "Sek." : "Wdh.") + '</span><span>OK</span></div>';
+  for (let j = 0; j < n; j++) {
+    const r = rows[j] || {};
+    h += '<div class="set' + (r.ok ? " ok" : "") + '" data-i="' + j + '"><span class="set-n">' + (j + 1) + '</span><span class="set-kg">' + setKgTxt(id, t, r) + '</span>'
+      + '<input class="in-r" id="r-' + id + '-' + j + '" inputmode="numeric" autocomplete="off" aria-label="' + (ex.zeit ? "Sekunden" : "Wiederholungen") + ' Satz ' + (j + 1) + '" placeholder="' + ex.min + '–' + ex.max + '" value="' + esc(r.r != null ? r.r : "") + '">'
+      + '<button type="button" class="chk" data-act="chk" aria-label="Satz ' + (j + 1) + ' erledigt" aria-pressed="' + (r.ok ? "true" : "false") + '">✓</button></div>';
+  }
+  h += '</div></section>'
+    + '<details class="how"><summary>So geht\'s richtig</summary><div class="prose" style="margin-top:8px"><ol>' + ex.how.map(x => '<li>' + esc(x) + '</li>').join("") + '</ol><p><b>Fehler vermeiden:</b> ' + ex.fehler.map(esc).join(" ") + '</p><p><b>Tipp:</b> ' + esc(ex.tipp) + '</p></div></details>'
+    + '<div class="nav-row"><button class="btn" data-act="prev"' + (UI.step === 0 ? " disabled" : "") + '>←</button><button class="btn primary" data-act="next">' + (UI.step === list.length - 1 ? "Zum Abschluss →" : "Weiter →") + '</button></div></div>';
+  return h;
+}
+
+/* ---------- Seite: DEHNEN – Tagesplan, nur Übungen + Videos ---------- */
+function viewDehnen() {
+  const today = parseKey(todayKey()).getDay(), d = UI.dday == null ? today : UI.dday, list = FUSS.concat(EXTRA[d]), custom = S.stretch.custom || [];
+  const mins = Math.round(list.reduce((a, id) => a + STRETCH[id].min, 0));
+  let h = '<div class="stack"><div><p class="eyebrow">Jeden Tag ca. ' + mins + ' Min</p><h1>Dehnen</h1></div>'
+    + '<div class="daychips" role="group" aria-label="Wochentag">' + [1, 2, 3, 4, 5, 6, 0].map(i => '<button type="button" data-act="dday" data-v="' + i + '" class="' + (i === d ? "on" : "") + (i === today ? " today" : "") + '" aria-pressed="' + (i === d) + '">' + WD[i] + '</button>').join("") + '</div>'
+    + '<p class="small muted">' + WD_LONG[d] + (d === today ? ' (heute)' : '') + (DAYS[d] ? ' – nach ' + PLAN[DAYS[d]].name : '') + '. Tipp auf eine Übung für das Video.</p>';
+  if (custom.length) h += '<div class="card"><div class="area-h"><h3>Zuerst: vom Physio</h3><span class="small muted">jeden Tag</span></div><ul class="list">' + custom.map(c => '<li><div class="row"><span><b>' + esc(c.name) + '</b><small>' + esc([c.dose, c.side && c.side !== "beide" ? "nur " + c.side : "", c.note].filter(Boolean).join(" · ")) + '</small></span><button class="link small" data-act="cdel" data-id="' + esc(c.id) + '">Löschen</button></div></li>').join("") + '</ul></div>';
+  if (UI.confirm && UI.confirm.startsWith("cdel-")) { const c = custom.find(x => x.id === UI.confirm.slice(5)); if (c) h += '<div class="card note"><p><b>⚠️ „' + esc(c.name) + '“ löschen?</b> Das geht nicht rückgängig.</p><div class="btn-row"><button class="btn primary" data-act="cdel2">Ja, löschen</button><button class="btn" data-act="cancel">Abbrechen</button></div></div>'; }
+  h += '<div class="card"><div class="area-h"><h3>Jeden Tag: Fuß & Wade</h3><span class="small muted">4 Übungen</span></div>' + stList(FUSS) + '</div>'
+    + '<div class="card"><div class="area-h"><h3>Dazu am ' + WD_LONG[d] + '</h3><span class="small muted">2 Übungen</span></div>' + stList(EXTRA[d]) + '</div>'
+    + '<div class="card note"><p class="small"><b>Hast du Übungen vom Physio?</b> Die haben immer Vorrang. Dehnen soll ziehen, nicht wehtun – bei Schmerz sofort aufhören.</p></div>'
+    + '<details class="how"><summary>+ Übung vom Physio eintragen</summary><div class="stack" style="margin-top:10px"><div class="field"><label for="cName">Name der Übung</label><input id="cName" placeholder="z. B. Zehen krallen mit Handtuch" maxlength="80"></div>'
+    + '<div class="grid2"><div class="field"><label for="cDose">Wie oft / wie lange</label><input id="cDose" placeholder="z. B. 3 × 15 Wdh." maxlength="40"></div><div class="field"><label for="cSide">Seite</label><select id="cSide"><option>beide</option><option>links</option><option>rechts</option></select></div></div>'
+    + '<div class="field"><label for="cNote">Hinweis (optional)</label><input id="cNote" placeholder="z. B. langsam, schmerzfrei" maxlength="120"></div><button class="btn primary" data-act="cadd">Speichern</button></div></details></div>';
+  return h;
+}
+function stList(ids) { return '<ul class="list">' + ids.map(id => '<li><button type="button" class="row" data-act="stinfo" data-id="' + id + '"><span><b>' + esc(STRETCH[id].name) + '</b><small>' + esc(STRETCH[id].dose) + '</small></span><span class="play" aria-hidden="true">▶</span></button></li>').join("") + '</ul>'; }
+
+/* ---------- Seite: KALENDER ---------- */
+function viewKalender() {
+  const t = todayKey(); if (!UI.month) UI.month = t.slice(0, 7);
+  const [y, m] = UI.month.split("-").map(Number), first = new Date(y, m - 1, 1), days = new Date(y, m, 0).getDate(), off = (first.getDay() + 6) % 7, st = stats();
+  let md = 0;
+  let h = '<div class="stack"><div><p class="eyebrow">Check-Liste</p><h1>Wann war ich da?</h1></div>'
+    + '<div class="card ink"><p class="eyebrow">Gym-Besuche insgesamt</p><div class="big-row"><span class="big">' + st.total + '×</span><span class="muted" style="padding-bottom:6px">Diesen Monat: ' + st.month + '</span></div></div>'
+    + '<div class="stat-row"><div class="stat"><b>' + st.streak + '</b><span>Serie</span></div><div class="stat"><b>' + (st.quote == null ? "–" : st.quote + "%") + '</b><span>Quote 4 Wochen</span></div><div class="stat"><b>' + nextBadgeTxt(st.total) + '</b><span>bis zum nächsten Abzeichen</span></div></div>'
+    + '<div class="card"><div class="cal-nav"><button class="icon-btn" data-act="mon" data-n="-1" aria-label="Vorheriger Monat"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><h2>' + first.toLocaleDateString("de-DE", {month:"long", year:"numeric"}) + '</h2><button class="icon-btn" data-act="mon" data-n="1" aria-label="Nächster Monat"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div><div class="cal">';
+  ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].forEach(x => h += '<span class="wd">' + x + '</span>');
+  for (let i = 0; i < off; i++) h += '<span></span>';
+  for (let d = 1; d <= days; d++) {
+    const k = y + "-" + pad(m) + "-" + pad(d), s = dayStatus(k), p = isPlanned(k) ? DAYS[parseKey(k).getDay()] : "";
+    if (s === "done") md++;
+    const mark = s === "done" ? "✓" : s === "missed" ? "✗" : s === "excused" ? "U/K" : p;
+    h += '<button type="button" data-act="day" data-d="' + k + '" class="st-' + (s || "none") + (k === t ? " is-today" : "") + (UI.flash === k ? " flash" : "") + '" aria-label="' + esc(fmtDate(k, {weekday:"long", day:"numeric", month:"long"})) + '">' + d + (mark ? '<small>' + mark + '</small>' : '') + '</button>';
+  }
+  h += '</div><div class="legend"><span><i style="background:var(--fg)"></i>war da</span><span><i style="border:2px solid var(--muted)"></i>gefehlt</span><span><i style="border:2px dashed var(--fg)"></i>geplant</span><span><i style="background:var(--soft)"></i>Urlaub/krank</span></div><p class="small muted">' + md + '× da in diesem Monat. Tipp auf einen Tag zum Ändern.</p></div>';
+  h += '<div class="card"><h3>Abzeichen</h3><div class="badges">' + BADGES.map(b => '<div class="badge' + (st.total >= b.n ? " got" : "") + '"><b>' + b.n + '×</b><span>' + b.t + '</span></div>').join("") + '</div></div></div>';
+  return h;
+}
+function nextBadgeTxt(total) { const b = BADGES.find(x => x.n > total); return b ? String(b.n - total) : "–"; }
+function daySheet(k) {
+  const w = S.workouts[k], st = dayStatus(k), p = planOf(k);
+  let h = '<div class="sheet-top"><h2>' + esc(fmtDate(k, {weekday:"long", day:"numeric", month:"long"})) + '</h2><button class="icon-btn" data-act="close" aria-label="Schließen">' + X_ICON + '</button></div><p class="muted">' + (p ? PLAN[p].name : "Kein Trainingstag") + '</p>';
+  if (w && hasLogged(w)) { h += '<div class="card"><div class="tbl-wrap"><table><tbody>'; for (const id in w.ex) { if (!EX[id]) continue; const ss = okSets(w, id); if (!ss.length) continue; h += '<tr><td>' + esc(EX[id].name) + '</td><td class="r">' + ss.map(s => noKg(EX[id]) ? num(s.r) : fmtNum(num(s.kg) || 0) + "×" + num(s.r)).join(", ") + '</td></tr>'; } h += '</tbody></table></div>' + (w.note ? '<p class="small"><b>Notiz:</b> ' + esc(w.note) + '</p>' : '') + '</div>'; }
+  if (k > todayKey()) h += '<p class="small muted">Liegt in der Zukunft.</p>';
+  else if (!(w && hasLogged(w))) h += '<div class="btn-row"><button class="btn primary" data-act="setst" data-st="manual" data-d="' + k + '">War da ✓</button><button class="btn" data-act="setst" data-st="missed" data-d="' + k + '">Nicht da ✗</button><button class="btn" data-act="setst" data-st="excused" data-d="' + k + '">Urlaub / krank</button></div>';
+  if (w) h += UI.confirm === "del-" + k ? '<div class="card note"><p><b>⚠️ Achtung:</b> Alle Sätze und Notizen von diesem Tag werden gelöscht. Das geht nicht rückgängig.</p><div class="btn-row"><button class="btn primary" data-act="deld" data-d="' + k + '">Ja, löschen</button><button class="btn" data-act="cancel">Abbrechen</button></div></div>' : '<button class="link" data-act="askdel" data-d="' + k + '">Eintrag löschen</button>';
+  if (st === "missed" && !w) h += '<p class="small muted">Zählt automatisch als „gefehlt“, weil nichts eingetragen ist.</p>';
+  return h;
+}
+
+/* ---------- Seite: MEHR ---------- */
+function viewMehr() {
+  let h = '<div class="stack"><h1>Mehr</h1><div class="card"><ul class="list">'
+    + '<li><button class="row" data-act="go" data-h="fortschritt"><span><b>Fortschritt & Level</b><small>Deine Level, Muskeln, Kraft, Körpergewicht</small></span><span class="num">→</span></button></li>'
+    + '<li><button class="row" data-act="go" data-h="wissen"><span><b>Wissen</b><small>Regeln, Level-Erklärung, Eiweiß, Sicherheit</small></span><span class="num">→</span></button></li></ul></div>';
+  if (!IN_CLAUDE) h += '<div class="card prose"><h3>Als App aufs Handy</h3><p class="small"><b>iPhone (Safari):</b> Teilen-Symbol → „Zum Home-Bildschirm“.<br><b>Android (Chrome):</b> ⋮ → „Zum Startbildschirm hinzufügen“.</p><p class="small muted">Deine Daten bleiben auf diesem Handy. Mach ab und zu eine Sicherung (unten).</p></div>';
+  h += '<div class="card"><h3>Einstellungen</h3><div class="field"><label for="startD">Plan-Start (ab da zählen Woche 1 und die Check-Liste)</label><input id="startD" type="date" value="' + esc(start()) + '"></div>'
+    + '<p class="small muted">Speicherort: ' + (COL ? "privat in deinem Claude-Konto + dieser Browser." : IN_CLAUDE ? "nur dieser Browser. Öffne die App angemeldet in Claude." : "auf diesem Gerät (Browser-Speicher).") + '</p>'
+    + '<div class="btn-row"><button class="btn" data-act="export">Sicherung anzeigen</button><button class="btn" data-act="import">Sicherung einfügen</button></div><div id="dataBox"></div>';
+  h += UI.confirm === "reset" ? '<div class="card note"><p><b>⚠️ Achtung, Datenverlust:</b> Alle Trainings, Körperwerte und die Check-Liste werden gelöscht. Mach vorher eine Sicherung!</p><div class="btn-row"><button class="btn primary" data-act="reset2">Ja, alles löschen</button><button class="btn" data-act="cancel">Abbrechen</button></div></div>' : '<button class="link" data-act="reset">Alle Daten löschen …</button>';
+  return h + '</div></div>';
+}
+
+/* ---------- Seite: FORTSCHRITT ---------- */
+function viewFortschritt() {
+  let h = '<div class="stack"><button class="link" data-act="go" data-h="mehr">← Mehr</button><h1>Fortschritt</h1>';
+  // Deine Level pro Übung
+  const rows = Object.keys(EX).map(id => ({id, b:bestEver(id)})).filter(x => x.b != null);
+  h += '<div class="card"><h3>Deine Level</h3>';
+  if (!rows.length) h += '<p class="small muted">Nach deinem ersten Training siehst du hier für jede Übung dein Level – von 🥬 Lauch bis 👑 Legende.</p>';
+  else h += '<ul class="list">' + rows.map(x => { const ex = EX[x.id], l = levelOf(x.id, x.b), nx = l >= 5 ? "Höchstes Level" : noKg(ex) ? "Nächstes: " + ex.std[l] + (ex.zeit ? " Sek." : " Wdh.") : "Nächstes ab ca. " + fmtNum(needKg(x.id, l + 1, 10)) + " kg × 10"; return '<li><button class="row" data-act="info" data-ex="' + x.id + '"><span><b>' + esc(ex.name) + '</b><small>' + nx + '</small></span>' + badge(l) + '</button></li>'; }).join("") + '</ul>';
+  h += '</div>';
+  // Muskel-Karte
+  const ws = weekSets(), lv = {}; for (const m in ws) lv[m] = level4(ws[m]);
+  h += '<div class="card"><h3>Muskeln (letzte 7 Tage)</h3><div class="bodymap">' + bodyMap(lv) + '</div><div class="legend"><span><i style="background:var(--muscle);border:1px solid var(--line)"></i>0</span><span><i style="background:var(--heat1)"></i>unter 4</span><span><i style="background:var(--heat2)"></i>4–10 Ziel</span><span><i style="background:var(--heat3)"></i>über 10</span></div><div class="mbars">';
+  for (const m in MUSCLES) h += '<div class="mbar"><span>' + MUSCLES[m] + '</span><span class="track"><span class="zone" style="left:' + (4 / 14 * 100) + '%;width:' + (6 / 14 * 100) + '%"></span><span class="fill" style="width:' + Math.min(100, ws[m] / 14 * 100) + '%"></span></span><span class="v">' + fmtNum(ws[m]) + '</span></div>';
+  h += '</div><p class="small muted">Sätze pro Muskel. Gepunktet = Ziel 4–10. Hilfsmuskeln zählen halb.</p></div>';
+  // Kraft-Verlauf
+  const withData = rows.map(x => x.id);
+  h += '<div class="card"><h3>Kraft-Verlauf</h3>';
+  if (!withData.length) h += '<p class="small muted">Erscheint, sobald du eine Übung eingetragen hast.</p>';
+  else { if (!withData.includes(UI.chartEx)) UI.chartEx = withData[0]; const id = UI.chartEx, pts = Object.values(S.workouts).map(w => ({d:w.date, y:bestOf(w, id)})).filter(q => q.y != null).sort((a, b) => a.d < b.d ? -1 : 1).map(q => ({d:q.d, y:Math.round(q.y * 10) / 10}));
+    h += '<div class="field"><label for="chartSel">Übung</label><select id="chartSel">' + withData.map(x => '<option value="' + x + '"' + (x === id ? " selected" : "") + '>' + esc(EX[x].name) + '</option>').join("") + '</select></div><div class="chart">' + lineChart(pts, noKg(EX[id]) ? (EX[id].zeit ? "s" : "Wdh.") : "kg") + '</div><p class="small muted">' + (noKg(EX[id]) ? "Bester Satz pro Training." : "Geschätztes Maximalgewicht für 1 Wdh. (aus Gewicht × Wdh.) – musst du nie wirklich heben.") + '</p>'; }
+  h += '</div>';
+  // Körpergewicht
+  const ent = (S.body.entries || []).slice().sort((a, b) => a.d < b.d ? -1 : 1), kgPts = ent.filter(e => num(e.kg) != null).map(e => ({d:e.d, y:num(e.kg)}));
+  h += '<div class="card"><h3>Körpergewicht</h3><div class="chart">' + lineChart(kgPts, "kg") + '</div><div class="grid2"><div class="field"><label for="bD">Datum</label><input id="bD" type="date" value="' + todayKey() + '"></div><div class="field"><label for="bKg">Gewicht (kg)</label><input id="bKg" inputmode="decimal" placeholder="z. B. 70,5"></div></div><button class="btn primary" data-act="body">Speichern</button><p class="small muted">1× pro Woche morgens wiegen und auf den Trend achten.</p></div></div>';
+  return h;
+}
+
+/* ---------- Seite: WISSEN ---------- */
+function viewWissen() {
+  const e = (S.body.entries || []).filter(x => num(x.kg) != null).sort((a, b) => a.d < b.d ? 1 : -1)[0], kg = e ? num(e.kg) : 70;
+  return '<div class="stack"><button class="link" data-act="go" data-h="mehr">← Mehr</button><h1>Wissen</h1>'
+    + '<div class="card prose"><h3>Die 5 Grundregeln</h3><ol><li><b>Technik vor Gewicht.</b> Woche 1–2 leicht starten.</li><li><b>Doppelte Progression:</b> Erst Wdh. steigern, dann Gewicht. Die App rechnet mit.</li><li><b>Fast ans Limit:</b> aufhören, wenn noch 1–3 saubere Wdh. gehen würden.</li><li><b>Pausen 1,5–2 Min.</b> Unter 1 Min. bremst etwas, über 1,5 Min. kaum Unterschied.</li><li><b>Dranbleiben schlägt alles.</b> Einmal fehlen ist kein Drama.</li></ol></div>'
+    + '<div class="card prose"><h3>So funktionieren die Level</h3><p>Aus Gewicht × Wdh. schätzt die App, wie viel du 1× schaffen würdest. Das vergleicht sie mit Daten von strengthlevel.com für Männer mit ca. 70 kg.</p><div class="tbl-wrap"><table><tbody>' + LV.map(x => '<tr><td>' + x.e + ' <b>' + x.n + '</b></td><td>' + x.d + '</td></tr>').join("") + '</tbody></table></div><p class="small muted">Maschinen sind in jedem Studio etwas anders schwer – nimm die Level als Spaß-Richtwert. Plank: eigene grobe Einteilung (20 / 40 / 60 / 90 / 120 Sek.).</p></div>'
+    + '<div class="card prose"><h3>Essen & Schlafen</h3><p>Eiweiß 1,4–2,0 g pro kg Körpergewicht. Bei ' + fmtNum(kg) + ' kg: ca. <b>' + Math.round(kg * 1.4) + '–' + Math.round(kg * 2) + ' g am Tag</b>, verteilt auf 3–5 Mahlzeiten. Dazu 7–9 Std. Schlaf.</p><p class="small muted">Beispiele (ca.): Magerquark 250 g = 30 g · Hähnchen 150 g = 35 g · 3 Eier = 20 g · Skyr 150 g = 16 g.</p></div>'
+    + '<div class="card note prose"><h3>⚠️ Sicherheit</h3><ul><li>Brennen im Muskel ist normal. <b>Stechender Schmerz oder Schmerz im Gelenk: sofort aufhören.</b></li><li>Bei Verletzungen erst mit dem Physio abklären, was schon geht.</li><li>Lass dir die Maschinen einmal von einem Trainer zeigen.</li></ul></div>'
+    + '<div class="card prose"><h3>Quellen</h3><ul class="small"><li><a href="https://strengthlevel.com/strength-standards" target="_blank" rel="noopener">Strength Level – Kraft-Richtwerte (für die Level)</a></li><li><a href="https://thefitness.wiki/routines/r-fitness-basic-beginner-routine/" target="_blank" rel="noopener">r/Fitness Wiki – Basic Beginner Routine</a></li><li><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5477153/" target="_blank" rel="noopener">ISSN: Protein & Training (2017)</a></li><li><a href="https://pubmed.ncbi.nlm.nih.gov/39205815/" target="_blank" rel="noopener">Pausenlänge, Meta-Analyse (2024)</a></li><li><a href="https://rippedbody.com/progression/" target="_blank" rel="noopener">Doppelte Progression</a></li></ul><p class="small muted">Videos: eigene Animationen. Echte Personen findest du bei jeder Übung über den YouTube-Link.</p></div></div>';
+}
+
+/* ---------- Fenster: Übung / Dehnung ---------- */
+function infoSheet(id) {
+  const e = EX[id], b = bestEver(id);
+  return '<div class="sheet-top"><h2>' + esc(e.name) + '</h2><button class="icon-btn" data-act="close" aria-label="Schließen">' + X_ICON + '</button></div>' + vidHtml(id, e.name)
+    + '<div class="chips"><span class="chip solid">' + e.sets + ' × ' + e.min + '–' + e.max + (e.zeit ? " Sek." : " Wdh.") + '</span><span class="chip">Pause ' + mmss(e.rest) + '</span><span class="chip">' + startTxt(id) + '</span>' + (b != null ? badge(levelOf(id, b)) : '') + '</div>'
+    + '<div class="prose"><ol>' + e.how.map(x => '<li>' + esc(x) + '</li>').join("") + '</ol><p><b>Fehler vermeiden:</b> ' + e.fehler.map(esc).join(" ") + '</p><p><b>Tipp:</b> ' + esc(e.tipp) + '</p></div>'
+    + '<a class="link" href="https://www.youtube.com/results?search_query=' + encodeURIComponent(e.yt) + '" target="_blank" rel="noopener">Mit echten Personen auf YouTube ansehen ↗</a>';
+}
+function stretchSheet(id) {
+  const e = STRETCH[id];
+  return '<div class="sheet-top"><h2>' + esc(e.name) + '</h2><button class="icon-btn" data-act="close" aria-label="Schließen">' + X_ICON + '</button></div>' + vidHtml(id, e.name)
+    + '<div class="chips"><span class="chip solid">' + esc(e.dose) + '</span></div><div class="prose"><ol>' + e.how.map(x => '<li>' + esc(x) + '</li>').join("") + '</ol><p class="small muted">Nur schmerzfrei dehnen. Wenn dein Physio etwas anderes sagt, gilt das.</p></div>';
+}
+
+/* ---------- Rendern & Navigation ---------- */
+const VIEWS = {start:viewStart, plan:viewPlan, "tag-a":() => viewTag("A"), "tag-b":() => viewTag("B"), "tag-c":() => viewTag("C"), training:viewTraining, dehnen:viewDehnen, kalender:viewKalender, mehr:viewMehr, fortschritt:viewFortschritt, wissen:viewWissen};
+const TAB_OF = {start:"start", plan:"plan", "tag-a":"plan", "tag-b":"plan", "tag-c":"plan", dehnen:"dehnen", kalender:"kalender", mehr:"mehr", fortschritt:"mehr", wissen:"mehr"};
+function currentView() { const v = location.hash.replace("#", ""); return VIEWS[v] ? v : "start"; }
+function render() {
+  const v = currentView(); UI.needRender = false;
+  $("#main").innerHTML = VIEWS[v]();
+  document.body.classList.toggle("focus", v === "training");
+  document.querySelectorAll(".tabs a").forEach(a => { if (a.dataset.tab === TAB_OF[v]) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  if (UI.sheet) renderSheet();
+}
+function softRender() { const a = document.activeElement; if (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && $("#main").contains(a)) { UI.needRender = true; return; } render(); }
+function go(h) { if (location.hash === "#" + h) render(); else location.hash = h; window.scrollTo(0, 0); }
+function openSheet(kind, arg) { UI.sheet = {kind, arg}; renderSheet(); $("#sheetWrap").hidden = false; }
+function renderSheet() { const s = UI.sheet; if (!s) return; $("#sheet").innerHTML = s.kind === "info" ? infoSheet(s.arg) : s.kind === "st" ? stretchSheet(s.arg) : daySheet(s.arg); }
+function closeSheet() { UI.sheet = null; if (UI.confirm && UI.confirm.startsWith("del-")) UI.confirm = null; $("#sheetWrap").hidden = true; $("#sheet").innerHTML = ""; }
+let toastT = null;
+function toast(m, ms) { const t = $("#toast"); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, ms || 2600); }
+
+/* ---------- Pausen-Timer ---------- */
+const T = {end:0, total:0, id:null};
+let audio = null, wakeLock = null;
+function unlockAudio() { try { if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === "suspended") audio.resume(); } catch (e) {} }
+function beep() {
+  try { if (audio) [0, 0.25].forEach(o => { const os = audio.createOscillator(), g = audio.createGain(); os.frequency.value = 880; g.gain.value = 0.15; os.connect(g); g.connect(audio.destination); os.start(audio.currentTime + o); os.stop(audio.currentTime + o + 0.15); }); } catch (e) {}
+  try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (e) {}
+}
+function startTimer(sec, label) { T.total = sec; T.end = Date.now() + sec * 1000; $("#timerL").textContent = label; $("#timer").hidden = false; clearInterval(T.id); T.id = setInterval(tick, 250); tick(); }
+function tick() { const left = Math.max(0, Math.ceil((T.end - Date.now()) / 1000)); $("#timerT").textContent = mmss(left); $("#timerP").style.width = (T.total ? (1 - left / T.total) * 100 : 100) + "%"; if (left <= 0) { clearInterval(T.id); $("#timerL").textContent = "Pause vorbei – nächster Satz!"; beep(); } }
+function stopTimer() { clearInterval(T.id); $("#timer").hidden = true; }
+async function keepAwake() { try { if (!wakeLock && navigator.wakeLock) { wakeLock = await navigator.wakeLock.request("screen"); wakeLock.addEventListener("release", () => wakeLock = null); } } catch (e) {} }
+
+/* ---------- Eingaben im Training ---------- */
+function curEx() { const p = todayPlan(); return p ? planEx(p)[UI.step] : null; }
+function rowCtx(el) {
+  const sec = el.closest(".ex"), row = el.closest(".set"); if (!sec || !row) return null;
+  const t = todayKey(), w = ensureWorkout(t, todayPlan()), id = sec.dataset.ex, i = +row.dataset.i, n = setsFor(id, t);
+  if (!w.ex[id]) w.ex[id] = []; while (w.ex[id].length < n) w.ex[id].push({kg:null, r:null, ok:false});
+  return {t, w, id, i, row, set:w.ex[id][i]};
+}
+function updateProg() { const t = todayKey(), p = todayPlan(), bar = $(".prog"); if (bar && p) bar.outerHTML = progBar(p, t, UI.step); }
+// Gewicht geändert: Anzeige, Level und offene Sätze sofort anpassen
+function setWeight(kg) {
+  const id = curEx(), t = todayKey(); if (!id || noKg(EX[id])) return;
+  kg = Math.max(0, Math.round(kg * 10) / 10);
+  const w = ensureWorkout(t, todayPlan()); if (!w.wt) w.wt = {}; w.wt[id] = kg; changed("w-" + t);
+  const l = levelOf(id, score(id, kg, refReps(id, t)));
+  if ($("#wtSum")) $("#wtSum").textContent = fmtNum(kg) + " kg";
+  if ($("#lvSum")) $("#lvSum").innerHTML = badge(l);
+  if ($("#lvBox")) $("#lvBox").innerHTML = lvBox(id, t);
+  if (document.activeElement !== $("#wtIn") && $("#wtIn")) $("#wtIn").value = String(kg).replace(".", ",");
+  document.querySelectorAll(".set").forEach(r => { if (!r.classList.contains("ok")) r.querySelector(".set-kg").textContent = fmtNum(kg) + " kg ×"; });
+}
+// Neuer Rekord oder Level-Aufstieg? (eigene Idee)
+function cheer(id, t, set) {
+  const sc = score(id, num(set.kg) || 0, num(set.r)), prev = bestEver(id, t);
+  const others = okSets(S.workouts[t], id).filter(s => s !== set).map(s => score(id, num(s.kg) || 0, num(s.r)));
+  if (prev == null) { if (!UI.seen[id]) { UI.seen[id] = 1; return "Dein Start-Level: " + badgeTxt(levelOf(id, sc)); } return null; }
+  const best = Math.max(prev, ...others);
+  if (sc > best + 0.05) { const lo = levelOf(id, best), ln = levelOf(id, sc); return ln > lo ? "LEVEL UP! " + badgeTxt(ln) : "🏆 Neuer Rekord!"; }
+  return null;
+}
+
+document.addEventListener("input", e => {
+  const el = e.target;
+  if (el.matches(".in-r")) { const c = rowCtx(el); if (c) { c.set.r = num(el.value); changed("w-" + c.t); } }
+  else if (el.id === "wtIn") { const v = num(el.value); if (v != null) setWeight(v); }
+  else if (el.id === "note") { const t = todayKey(), w = ensureWorkout(t, todayPlan()); w.note = el.value; changed("w-" + t); }
+});
+document.addEventListener("change", e => {
+  const el = e.target;
+  if (el.id === "chartSel") { UI.chartEx = el.value; render(); }
+  else if (el.id === "startD" && /^\d{4}-\d{2}-\d{2}$/.test(el.value)) { S.settings.startDate = el.value; changed("settings"); toast("Plan-Start gespeichert"); }
+  else if (el.id === "wtIn") { const v = num(el.value); if (v != null) { setWeight(v); el.value = String(v).replace(".", ","); } }
+});
+document.addEventListener("toggle", e => { if (e.target && e.target.id === "wt") UI.wtOpen = e.target.open; }, true);
+document.addEventListener("focusout", () => setTimeout(() => { if (UI.needRender) softRender(); }, 50));
+
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-act]");
+  if (!b) { if (e.target === $("#sheetWrap")) closeSheet(); return; }
+  const act = b.dataset.act, t = todayKey();
+  switch (act) {
+    case "go": closeSheet(); go(b.dataset.h); break;
+    case "start": {
+      const p = b.dataset.p, w = S.workouts[t];
+      if (w && hasLogged(w) && w.plan !== p) toast("Heute läuft schon " + PLAN[w.plan].name);
+      else { UI.pick = p; if (w) { w.plan = p; if (["manual", "missed", "excused"].includes(w.status)) w.status = "draft"; changed("w-" + t); } }
+      UI.step = null; UI.wtOpen = false; go("training"); break;
+    }
+    case "exit": stopTimer(); go("start"); break;
+    case "next": UI.step++; UI.wtOpen = false; stopTimer(); render(); window.scrollTo(0, 0); break;
+    case "prev": UI.step = Math.max(0, UI.step - 1); UI.wtOpen = false; render(); window.scrollTo(0, 0); break;
+    case "jump": UI.step = +b.dataset.i; UI.wtOpen = false; render(); window.scrollTo(0, 0); break;
+    case "wt": { const id = curEx(); if (!id) return; setWeight(curKg(id, t) + (+b.dataset.d) * (EX[id].inc || 1)); break; }
+    case "chk": {
+      unlockAudio();
+      const c = rowCtx(b); if (!c) return;
+      const ex = EX[c.id];
+      c.set.r = num(c.row.querySelector(".in-r").value);
+      if (!c.set.ok && (c.set.r == null || c.set.r <= 0)) { toast(ex.zeit ? "Trag die Sekunden ein" : "Trag kurz deine Wdh. ein"); c.row.querySelector(".in-r").focus(); return; }
+      if (!c.set.ok) c.set.kg = noKg(ex) ? null : curKg(c.id, c.t);
+      c.set.ok = !c.set.ok; c.row.classList.toggle("ok", c.set.ok); b.setAttribute("aria-pressed", String(c.set.ok)); changed("w-" + c.t); updateProg();
+      if (c.set.ok) {
+        keepAwake();
+        const msg = cheer(c.id, c.t, c.set);
+        const left = okSets(c.w, c.id).length < setsFor(c.id, c.t);
+        if (left) startTimer(ex.rest, ex.name + " · Satz " + (c.i + 1) + " ✓"); else stopTimer();
+        if (msg) toast(msg, 3200); else if (!left) toast("Übung fertig ✓ – tipp auf Weiter");
+        if ($("#lvBox")) $("#lvBox").innerHTML = lvBox(c.id, c.t);
+      }
+      break;
+    }
+    case "t-plus": T.end += 30000; T.total += 30; clearInterval(T.id); T.id = setInterval(tick, 250); tick(); break;
+    case "t-minus": T.end = Math.max(Date.now(), T.end - 15000); tick(); break;
+    case "t-stop": stopTimer(); break;
+    case "feel": { const w = ensureWorkout(t, todayPlan()); w.feel = +b.dataset.v; changed("w-" + t); document.querySelectorAll(".feel button").forEach(x => x.classList.toggle("on", x === b)); break; }
+    case "finish": {
+      // Abschließen: der Tag steht danach im Kalender (auch ohne eingetragene Sätze)
+      const w = ensureWorkout(t, todayPlan()); w.status = "done"; w.finishedAt = Date.now(); changed("w-" + t);
+      stopTimer(); UI.step = null; UI.month = t.slice(0, 7); UI.flash = t;
+      setTimeout(() => { UI.flash = null; }, 2500);
+      toast("Im Kalender eingetragen ✓ Stark!", 3000); go("kalender"); break;
+    }
+    case "info": openSheet("info", b.dataset.ex); break;
+    case "stinfo": openSheet("st", b.dataset.id); break;
+    case "dday": UI.dday = +b.dataset.v; render(); break;
+    case "day": openSheet("day", b.dataset.d); break;
+    case "close": closeSheet(); break;
+    case "setst": { const k = b.dataset.d, w = ensureWorkout(k, planOf(k) || "A"); w.status = b.dataset.st; changed("w-" + k); toast("Eingetragen"); renderSheet(); render(); break; }
+    case "askdel": UI.confirm = "del-" + b.dataset.d; renderSheet(); break;
+    case "deld": { const k = b.dataset.d; delete S.workouts[k]; UI.confirm = null; changed("w-" + k); toast("Gelöscht"); closeSheet(); render(); break; }
+    case "cancel": UI.confirm = null; if (UI.sheet) renderSheet(); render(); break;
+    case "mon": { const [y, m] = UI.month.split("-").map(Number), d = new Date(y, m - 1 + (+b.dataset.n), 1); UI.month = d.getFullYear() + "-" + pad(d.getMonth() + 1); render(); break; }
+    case "cadd": {
+      const name = $("#cName").value.trim(); if (!name) { toast("Gib der Übung einen Namen"); $("#cName").focus(); return; }
+      S.stretch.custom.push({id:"c" + Date.now().toString(36), name, dose:$("#cDose").value.trim(), side:$("#cSide").value, note:$("#cNote").value.trim()});
+      changed("stretch"); toast("Gespeichert"); render(); break;
+    }
+    case "cdel": UI.confirm = "cdel-" + b.dataset.id; render(); break;
+    case "cdel2": { const id = UI.confirm.slice(5); S.stretch.custom = S.stretch.custom.filter(c => c.id !== id); UI.confirm = null; changed("stretch"); toast("Gelöscht"); render(); break; }
+    case "body": {
+      const d = $("#bD").value, kg = num($("#bKg").value);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || kg == null) { toast("Datum und Gewicht eintragen"); return; }
+      if (kg < 30 || kg > 250) { toast("Gewicht prüfen – das sieht nicht richtig aus"); return; }
+      const ent = S.body.entries || (S.body.entries = []), old = ent.find(x => x.d === d); if (old) old.kg = kg; else ent.push({d, kg, arm:null, waist:null});
+      changed("body"); toast("Gespeichert"); render(); break;
+    }
+    case "export": $("#dataBox").innerHTML = '<div class="field"><label for="exp">Deine Sicherung – kopieren und z. B. in Obsidian ablegen</label><textarea id="exp" readonly rows="5"></textarea></div><button class="btn" data-act="copy">Kopieren</button>'; $("#exp").value = JSON.stringify(S); break;
+    case "copy": { const ta = $("#exp"); try { await navigator.clipboard.writeText(ta.value); toast("Kopiert"); } catch (err) { ta.focus(); ta.select(); toast("Text markiert – jetzt kopieren"); } break; }
+    case "import": $("#dataBox").innerHTML = '<div class="field"><label for="imp">Sicherung hier einfügen</label><textarea id="imp" rows="5"></textarea></div><p class="small"><b>⚠️ Achtung:</b> Das ersetzt alle aktuellen Daten.</p><button class="btn primary" data-act="import2">Ersetzen & importieren</button>'; break;
+    case "import2": {
+      let o; try { o = JSON.parse($("#imp").value); } catch (err) { toast("Keine gültige Sicherung"); return; }
+      if (!o || !o.settings || !o.workouts || typeof o.workouts !== "object") { toast("Keine gültige Sicherung"); return; }
+      const old = allKeys(); S = Object.assign(freshState(), o); new Set(old.concat(allKeys())).forEach(k => changed(k)); toast("Importiert"); render(); break;
+    }
+    case "reset": UI.confirm = "reset"; render(); break;
+    case "reset2": { const old = allKeys(); UI.confirm = null; S = freshState(); old.forEach(k => changed(k)); SINGLE.forEach(k => changed(k)); toast("Alles gelöscht"); render(); break; }
+  }
+});
+
+/* ---------- Kopfzeile ---------- */
+$("#fsBtn").addEventListener("click", async () => {
+  try { if (document.fullscreenElement) await document.exitFullscreen(); else if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen(); else toast("Vollbild geht hier nicht – nutz „Zum Home-Bildschirm“"); }
+  catch (e) { toast("Vollbild geht hier nicht – nutz „Zum Home-Bildschirm“"); }
+});
+(function () {
+  try { const th = localStorage.getItem("hantelbuch.theme"); if (th) document.documentElement.setAttribute("data-theme", th); } catch (e) {}
+  $("#themeBtn").addEventListener("click", () => { const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"), nx = cur === "dark" ? "light" : "dark"; document.documentElement.setAttribute("data-theme", nx); try { localStorage.setItem("hantelbuch.theme", nx); } catch (e) {} });
+})();
+
+/* ---------- Start ---------- */
+window.addEventListener("hashchange", () => { UI.confirm = null; if (currentView() !== "training") stopTimer(); render(); window.scrollTo(0, 0); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#sheetWrap").hidden) closeSheet(); });
+loadLocal(); migrate(); setSync("local"); render(); initCloud();
+</script>
+
+<script>
+/* Offline-Speicher: App läuft auch mit schlechtem Netz im Gym (Videos brauchen Internet) */
+if ("serviceWorker" in navigator && location.protocol === "https:") { window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {})); }
+</script>
+</body>
+</html>
