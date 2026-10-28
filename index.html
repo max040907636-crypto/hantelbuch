@@ -640,7 +640,7 @@ function viewStart() {
       + '<p class="muted">' + P.areas.map(a => a.n).join(" · ") + ' — ' + planEx(n.plan).length + ' Übungen · ca. ' + minutes(n.plan, t) + ' Min</p>'
       + '<button class="btn primary block" data-act="start" data-p="' + n.plan + '">' + (hasLogged(w) ? "Weitermachen" : "Training starten") + '</button></div>';
   } else {
-    if (dayStatus(t) === "done") h += '<div class="card"><h2>Heute erledigt ✓</h2><p class="muted">Stark! Gut essen und schlafen – da wachsen die Muskeln.</p></div>';
+    if (dayStatus(t) === "done") h += '<div class="card"><h2>Heute erledigt ✓' + (w && w.buddy ? ' 👥' : '') + '</h2><p class="muted">' + (w && w.buddy ? 'Mit Kollege trainiert. ' : '') + 'Stark! Gut essen und schlafen – da wachsen die Muskeln.</p></div>';
     if (n) {
       const P = PLAN[n.plan], days = diffDays(t, n.k);
       h += '<div class="card ink"><p class="eyebrow">' + (before ? 'Dein Plan startet am ' + esc(fmtDate(start(), {weekday:"long", day:"numeric", month:"numeric"})) : 'Als Nächstes') + '</p>'
@@ -651,6 +651,8 @@ function viewStart() {
     }
     if (!hasLogged(w)) h += '<p class="small muted">Heute trotzdem trainieren? ' + Object.keys(PLAN).map(p => '<button class="link" data-act="start" data-p="' + p + '">' + PLAN[p].name + '</button>').join(" · ") + '</p>';
   }
+  // Mit Kollege trainiert? Ein Tipp – zählt als Gym-Besuch (eigene Übungen, nichts eintragen nötig)
+  if (dayStatus(t) !== "done") h += '<button class="btn block" data-act="buddy" data-d="' + t + '">👥 Heute mit Kollege trainiert</button>';
   // Zähler: wie oft warst du schon da?
   h += '<button class="card" style="text-align:left" data-act="go" data-h="kalender"><p class="eyebrow">So oft warst du schon im Gym</p><div class="big-row"><span class="big">' + st.total + '×</span><span class="muted" style="padding-bottom:6px">Diesen Monat: ' + st.month + ' · Serie: ' + st.streak + '</span></div></button>';
   h += '<div class="card"><h3>' + (before ? 'Deine erste Woche' : 'Diese Woche') + '</h3>' + weekRow(mondayOf(before ? start() : t)) + '</div></div>';
@@ -758,20 +760,20 @@ function viewKalender() {
   for (let d = 1; d <= days; d++) {
     const k = y + "-" + pad(m) + "-" + pad(d), s = dayStatus(k), p = isPlanned(k) ? DAYS[parseKey(k).getDay()] : "";
     if (s === "done") md++;
-    const mark = s === "done" ? "✓" : s === "missed" ? "✗" : s === "excused" ? "U/K" : p;
+    const mark = s === "done" ? (S.workouts[k] && S.workouts[k].buddy ? "👥" : "✓") : s === "missed" ? "✗" : s === "excused" ? "U/K" : p;
     h += '<button type="button" data-act="day" data-d="' + k + '" class="st-' + (s || "none") + (k === t ? " is-today" : "") + (UI.flash === k ? " flash" : "") + '" aria-label="' + esc(fmtDate(k, {weekday:"long", day:"numeric", month:"long"})) + '">' + d + (mark ? '<small>' + mark + '</small>' : '') + '</button>';
   }
-  h += '</div><div class="legend"><span><i style="background:var(--fg)"></i>war da</span><span><i style="border:2px solid var(--muted)"></i>gefehlt</span><span><i style="border:2px dashed var(--fg)"></i>geplant</span><span><i style="background:var(--soft)"></i>Urlaub/krank</span></div><p class="small muted">' + md + '× da in diesem Monat. Tipp auf einen Tag zum Ändern.</p></div>';
+  h += '</div><div class="legend"><span><i style="background:var(--fg)"></i>war da</span><span>👥 mit Kollege</span><span><i style="border:2px solid var(--muted)"></i>gefehlt</span><span><i style="border:2px dashed var(--fg)"></i>geplant</span><span><i style="background:var(--soft)"></i>Urlaub/krank</span></div><p class="small muted">' + md + '× da in diesem Monat. Tipp auf einen Tag zum Ändern.</p></div>';
   h += '<div class="card"><h3>Abzeichen</h3><div class="badges">' + BADGES.map(b => '<div class="badge' + (st.total >= b.n ? " got" : "") + '"><b>' + b.n + '×</b><span>' + b.t + '</span></div>').join("") + '</div></div></div>';
   return h;
 }
 function nextBadgeTxt(total) { const b = BADGES.find(x => x.n > total); return b ? String(b.n - total) : "–"; }
 function daySheet(k) {
   const w = S.workouts[k], st = dayStatus(k), p = planOf(k);
-  let h = '<div class="sheet-top"><h2>' + esc(fmtDate(k, {weekday:"long", day:"numeric", month:"long"})) + '</h2><button class="icon-btn" data-act="close" aria-label="Schließen">' + X_ICON + '</button></div><p class="muted">' + (p ? PLAN[p].name : "Kein Trainingstag") + '</p>';
+  let h = '<div class="sheet-top"><h2>' + esc(fmtDate(k, {weekday:"long", day:"numeric", month:"long"})) + '</h2><button class="icon-btn" data-act="close" aria-label="Schließen">' + X_ICON + '</button></div><p class="muted">' + (w && w.buddy ? "👥 Mit Kollege trainiert" : p ? PLAN[p].name : "Kein Trainingstag") + '</p>';
   if (w && hasLogged(w)) { h += '<div class="card"><div class="tbl-wrap"><table><tbody>'; for (const id in w.ex) { if (!EX[id]) continue; const ss = okSets(w, id); if (!ss.length) continue; h += '<tr><td>' + esc(EX[id].name) + '</td><td class="r">' + ss.map(s => noKg(EX[id]) ? num(s.r) : fmtNum(num(s.kg) || 0) + "×" + num(s.r)).join(", ") + '</td></tr>'; } h += '</tbody></table></div>' + (w.note ? '<p class="small"><b>Notiz:</b> ' + esc(w.note) + '</p>' : '') + '</div>'; }
   if (k > todayKey()) h += '<p class="small muted">Liegt in der Zukunft.</p>';
-  else if (!(w && hasLogged(w))) h += '<div class="btn-row"><button class="btn primary" data-act="setst" data-st="manual" data-d="' + k + '">War da ✓</button><button class="btn" data-act="setst" data-st="missed" data-d="' + k + '">Nicht da ✗</button><button class="btn" data-act="setst" data-st="excused" data-d="' + k + '">Urlaub / krank</button></div>';
+  else if (!(w && hasLogged(w))) h += '<div class="btn-row"><button class="btn primary" data-act="setst" data-st="manual" data-d="' + k + '">War da ✓</button><button class="btn" data-act="buddy" data-d="' + k + '">Mit Kollege 👥</button><button class="btn" data-act="setst" data-st="missed" data-d="' + k + '">Nicht da ✗</button><button class="btn" data-act="setst" data-st="excused" data-d="' + k + '">Urlaub / krank</button></div>';
   if (w) h += UI.confirm === "del-" + k ? '<div class="card note"><p><b>⚠️ Achtung:</b> Alle Sätze und Notizen von diesem Tag werden gelöscht. Das geht nicht rückgängig.</p><div class="btn-row"><button class="btn primary" data-act="deld" data-d="' + k + '">Ja, löschen</button><button class="btn" data-act="cancel">Abbrechen</button></div></div>' : '<button class="link" data-act="askdel" data-d="' + k + '">Eintrag löschen</button>';
   if (st === "missed" && !w) h += '<p class="small muted">Zählt automatisch als „gefehlt“, weil nichts eingetragen ist.</p>';
   return h;
@@ -1029,7 +1031,12 @@ document.addEventListener("click", async e => {
     case "dday": UI.dday = +b.dataset.v; render(); break;
     case "day": openSheet("day", b.dataset.d); break;
     case "close": closeSheet(); break;
-    case "setst": { const k = b.dataset.d, w = ensureWorkout(k, planOf(k) || "A"); w.status = b.dataset.st; changed("w-" + k); toast("Eingetragen"); renderSheet(); render(); break; }
+    case "buddy": {   // Tag als „mit Kollege trainiert“ eintragen
+      const k = b.dataset.d, w = ensureWorkout(k, planOf(k)); w.status = "done"; w.buddy = true; w.finishedAt = Date.now(); changed("w-" + k);
+      closeSheet(); UI.month = k.slice(0, 7); UI.flash = k; setTimeout(() => { UI.flash = null; }, 2500);
+      toast("Mit Kollege eingetragen 👥 Zählt als Gym-Besuch!", 3000); go("kalender"); break;
+    }
+    case "setst": { const k = b.dataset.d, w = ensureWorkout(k, planOf(k) || "A"); w.status = b.dataset.st; w.buddy = false; changed("w-" + k); toast("Eingetragen"); renderSheet(); render(); break; }
     case "askdel": UI.confirm = "del-" + b.dataset.d; renderSheet(); break;
     case "deld": { const k = b.dataset.d; delete S.workouts[k]; UI.confirm = null; changed("w-" + k); toast("Gelöscht"); closeSheet(); render(); break; }
     case "cancel": UI.confirm = null; if (UI.sheet) renderSheet(); render(); break;
