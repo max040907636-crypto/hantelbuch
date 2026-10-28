@@ -216,6 +216,17 @@ textarea{width:100%;min-height:72px;border-radius:10px;border:1px solid var(--li
 /* Level-Seite: Fortschrittsbalken bis zum nächsten Level */
 .lvbar{display:block;height:8px;border-radius:4px;background:var(--line);margin:6px 0 4px;overflow:hidden}
 .lvbar i{display:block;height:100%;background:var(--fg);border-radius:4px}
+.wt-line{display:flex;align-items:center;gap:10px;border:2px solid var(--fg);border-radius:var(--r);padding:10px 12px;background:var(--surface)}
+.wt-line .grow{flex:1;min-width:0;display:flex;flex-direction:column}
+.wt-line b{font-family:var(--f-display);font-size:28px}
+.small-btn{min-height:44px;padding:0 12px;font-size:15px}
+.kgrow{padding:12px 0;display:flex;flex-direction:column;gap:8px}
+.kg-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.kg-name{font-size:17px;text-align:left}
+.stepper.sm button{height:48px;font-size:26px}
+.stepper.sm input{height:48px;font-size:26px}
+.stepper.sm{grid-template-columns:52px minmax(0,1fr) auto 52px}
+.stepper.sm span{font-size:13px;white-space:nowrap;color:var(--muted)}
 .lv.off{background:transparent;color:var(--muted);border:1px solid var(--line)}
 .card.ink .chip{border-color:var(--inv);color:var(--inv)}
 .icon-btn[aria-current="page"]{background:var(--fg);color:var(--inv);border-color:var(--fg)}
@@ -297,7 +308,7 @@ td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
     <a href="#start" data-tab="start"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Start</a>
     <a href="#plan" data-tab="plan"><svg viewBox="0 0 24 24"><path d="M3 12h3M18 12h3M6 8v8M18 8v8M9 6v12M15 6v12M9 12h6"/></svg>Plan</a>
     <a href="#uebungen" data-tab="uebungen"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M10 9l5 3-5 3z"/></svg>Übungen</a>
-    <a href="#level" data-tab="level"><svg viewBox="0 0 24 24"><path d="M3 20h18M5 16l4-5 4 3 6-8"/></svg>Level</a>
+    <a href="#kilos" data-tab="kilos"><svg viewBox="0 0 24 24"><path d="M3 20h18M5 16l4-5 4 3 6-8"/></svg>Kilos</a>
     <a href="#dehnen" data-tab="dehnen"><svg viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="2"/><path d="M12 7v6l-4 8M12 13l4 8M5 9l7-1 7 1"/></svg>Dehnen</a>
     <a href="#kalender" data-tab="kalender"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 15l2 2 4-4"/></svg>Kalender</a>
   </div>
@@ -541,7 +552,9 @@ function suggest(id, k) {
   if (below === 1) return {kg, text:"<b>Gewicht halten:</b> " + fmtNum(kg) + " kg – alle Sätze in " + ex.min + "–" + ex.max + " Wdh. bringen."};
   return {kg, text:"<b>Gleiches Gewicht:</b> " + fmtNum(kg) + " kg – pro Satz 1 Wdh. mehr als letztes Mal." + side};
 }
-function curKg(id, t) { const w = S.workouts[t]; if (w && w.wt && w.wt[id] != null) return w.wt[id]; const sg = suggest(id, t); return sg.kg != null ? sg.kg : (EX[id].start ? EX[id].start.kg : 0); }
+// Im Bereich „Kilos“ eingestellt? Gilt, bis du die Übung wieder trainiert hast – danach rechnet die App selbst weiter.
+function manualKg(id, t) { const m = (S.settings.kg || {})[id]; if (!m) return null; const h = history(id, t); return (!h.length || m.d >= h[0].date) ? m.kg : null; }
+function curKg(id, t) { const w = S.workouts[t]; if (w && w.wt && w.wt[id] != null) return w.wt[id]; const mk = manualKg(id, t); if (mk != null) return mk; const sg = suggest(id, t); return sg.kg != null ? sg.kg : (EX[id].start ? EX[id].start.kg : 0); }
 function refReps(id, t) { const ss = okSets(S.workouts[t], id); if (ss.length) return Math.max(...ss.map(s => num(s.r))); const e = EX[id]; return Math.round((e.min + e.max) / 2); }
 function lvBox(id, t) {
   const ex = EX[id], kg = curKg(id, t), r = refReps(id, t), l = levelOf(id, score(id, kg, r));
@@ -692,11 +705,9 @@ function viewTraining() {
     + '<div><p class="eyebrow">' + areaOf(p, id) + '</p><h1>' + esc(ex.name) + '</h1></div>'
     + '<div class="chips"><span class="chip solid">' + n + ' × ' + ex.min + '–' + ex.max + (ex.zeit ? " Sek." : " Wdh.") + (ex.jeSeite ? " je Seite" : "") + '</span><span class="chip">Pause ' + mmss(ex.rest) + '</span></div>';
   if (!noKg(ex)) {
-    // Gewicht einstellen: aufklappen mit dem Pfeil
+    // Gewicht: wird im Bereich „Kilos“ eingestellt – hier nur anzeigen (+ schnell ändern)
     const kg = curKg(id, t), l = levelOf(id, score(id, kg, refReps(id, t)));
-    h += '<details class="wt" id="wt"' + (UI.wtOpen ? " open" : "") + '><summary><span class="arr" aria-hidden="true">▸</span><span class="grow"><span class="eyebrow">Gewicht einstellen · hier tippen</span><span><b id="wtSum">' + fmtNum(kg) + ' kg</b> <span class="small muted">' + esc(ex.start.wie.trim()) + '</span></span></span><span id="lvSum">' + badge(l) + '</span></summary>'
-      + '<div class="wt-body"><div class="stepper"><button type="button" data-act="wt" data-d="-1" aria-label="Weniger Gewicht">−</button><input id="wtIn" inputmode="decimal" autocomplete="off" aria-label="Gewicht in kg" value="' + String(kg).replace(".", ",") + '"><span>kg</span><button type="button" data-act="wt" data-d="1" aria-label="Mehr Gewicht">+</button></div>'
-      + '<div id="lvBox">' + lvBox(id, t) + '</div><p class="hint small">' + sg.text + '</p></div></details>';
+    h += '<div class="wt-line"><span class="grow"><span class="eyebrow">Dein Gewicht</span><span><b id="wtSum">' + fmtNum(kg) + ' kg</b> <span class="small muted">' + esc(ex.start.wie.trim()) + '</span></span></span><span id="lvSum">' + badge(l) + '</span><button type="button" class="btn small-btn" data-act="wtsheet">ändern</button></div><p class="hint small">' + sg.text + '</p>';
   } else {
     const best = bestOf(w, id) || bestEver(id, t) || 0, l = levelOf(id, best);
     h += '<p class="hint">' + sg.text + '</p><div class="card"><div class="area-h"><h3>Dein Level</h3>' + badge(l) + '</div>' + meter(l) + '<p class="small muted">' + (l >= 5 ? "Höchstes Level!" : "Für " + badgeTxt(l + 1) + ": " + ex.std[l] + (ex.zeit ? " Sek." : " Wdh.") + " in einem Satz") + '</p></div>';
@@ -791,6 +802,13 @@ function lastSet(id) {
 function lvProgress(id, sc, l) { if (l >= 5) return 100; const std = EX[id].std, lo = l > 0 ? std[l - 1] : 0, hi = std[l]; return Math.max(4, Math.min(100, Math.round((sc - lo) / (hi - lo) * 100))); }
 function lvRow(id) {
   const ex = EX[id], b = bestEver(id), unit = ex.zeit ? " Sek." : " Wdh.";
+  if (!noKg(ex)) {   // Übung mit Gewicht: hier einstellen
+    const t = todayKey(), kg = curKg(id, t), r = 10, sc = score(id, kg, r), l = levelOf(id, sc), ls = lastSet(id);
+    const nx = l >= 5 ? "Höchstes Level 👑" : "Für " + badgeTxt(l + 1) + ": ca. " + fmtNum(needKg(id, l + 1, r)) + " kg × 10";
+    return '<li class="kgrow"><div class="kg-top"><button type="button" class="link kg-name" data-act="info" data-ex="' + id + '">' + esc(ex.name) + '</button>' + badge(l) + '</div>'
+      + '<div class="stepper sm"><button type="button" data-act="kgs" data-ex="' + id + '" data-d="-1" aria-label="Weniger Gewicht ' + esc(ex.name) + '">−</button><input class="kg-in" data-ex="' + id + '" inputmode="decimal" autocomplete="off" aria-label="Gewicht ' + esc(ex.name) + ' in kg" value="' + String(kg).replace(".", ",") + '"><span>kg' + esc(ex.start.wie) + '</span><button type="button" data-act="kgs" data-ex="' + id + '" data-d="1" aria-label="Mehr Gewicht ' + esc(ex.name) + '">+</button></div>'
+      + '<span class="lvbar" aria-hidden="true"><i style="width:' + lvProgress(id, sc, l) + '%"></i></span><small class="muted">' + nx + (ls ? ' · Zuletzt: ' + fmtNum(ls.kg) + ' kg × ' + ls.r : ' · Noch nicht trainiert') + '</small></li>';
+  }
   if (b == null) return '<li><button type="button" class="row" data-act="info" data-ex="' + id + '"><span><b>' + esc(ex.name) + '</b><small>Noch nicht gemacht · ' + startTxt(id) + '</small></span><span class="lv off">–</span></button></li>';
   const l = levelOf(id, b), ls = lastSet(id);
   const now = noKg(ex) ? "Bester Satz: " + fmtNum(b) + unit : "Zuletzt: " + (ls ? fmtNum(ls.kg) + " kg × " + ls.r : "–");
@@ -801,17 +819,17 @@ function viewLevel() {
   const ids = Object.keys(EX), done = ids.filter(id => bestEver(id) != null), lvs = done.map(id => levelOf(id, bestEver(id)));
   const avg = lvs.length ? Math.floor(lvs.reduce((a, b) => a + b, 0) / lvs.length + 1e-9) : 0;
   if (!UI.lvTag) { const n = nextUp(); UI.lvTag = n ? n.plan : "A"; }
-  let h = '<div class="stack"><div><p class="eyebrow">Wie weit bist du?</p><h1>Level & Kilos</h1></div>';
+  let h = '<div class="stack"><div><p class="eyebrow">Gewichte einstellen & Level</p><h1>Kilos</h1></div>';
   // Gesamt-Level
   h += '<div class="card ink"><p class="eyebrow">Dein Gesamt-Level</p>';
   if (done.length) h += '<div class="big-row"><span class="big">' + LV[avg].e + '</span><span style="padding-bottom:4px"><b style="font-size:26px">' + LV[avg].n + '</b><br><span class="muted">' + done.length + ' von ' + ids.length + ' Übungen gemacht</span></span></div><div class="chips">' + LV.map((x, i) => { const n = lvs.filter(v => v === i).length; return n ? '<span class="chip">' + x.e + ' ' + x.n + ': ' + n + '</span>' : ''; }).join("") + '</div>';
   else h += '<p>Noch nichts eingetragen. Nach deinem ersten Training siehst du hier für jede Übung, wie stark du bist.</p>';
   h += '<p class="small muted">🥬 Lauch → 🐣 Rookie → ⚙️ Maschine → 🦍 Beast → 🐺 Alpha → 👑 Legende</p></div>';
-  // Übungen eines Tages mit Kilos und Level
+  // Übungen eines Tages: Kilos einstellen + Level
+  h += '<p class="small">Stell hier mit <b>−</b> und <b>+</b> ein, mit wie viel Kilo du trainierst. Das Training übernimmt das automatisch. Das Abzeichen zeigt, wie gut das Gewicht bei 10 Wdh. ist.</p>';
   h += '<div class="daychips seg3" role="group" aria-label="Trainingstag">' + Object.keys(PLAN).map(p => '<button type="button" data-act="lvf" data-v="' + p + '" class="' + (p === UI.lvTag ? "on" : "") + '" aria-pressed="' + (p === UI.lvTag) + '">' + p + ' · ' + PLAN[p].name.split(" ")[0] + '</button>').join("") + '</div>';
   PLAN[UI.lvTag].areas.forEach(a => { h += '<div class="card"><div class="area-h"><h3>' + a.n + '</h3><span class="small muted">' + a.ex.filter(id => bestEver(id) != null).length + '/' + a.ex.length + ' gemacht</span></div><ul class="list">' + a.ex.map(lvRow).join("") + '</ul></div>'; });
-  h += '<div class="card note"><p class="small"><b>Wo stelle ich die Kilos ein?</b> Im Training: Bei jeder Übung oben auf den Kasten <b>„Gewicht einstellen“</b> tippen, dann mit <b>−</b> und <b>+</b> ändern. Hier siehst du danach, wie weit du bist.</p></div>';
-  h += '<p class="small muted">Der Balken zeigt, wie weit du bis zum nächsten Level bist. Das Level zählt immer dein bester Satz bisher.</p>';
+  h += '<p class="small muted">Der Balken zeigt, wie weit du bis zum nächsten Level bist. Nach jedem Training schlägt die App selbst das nächste Gewicht vor – du kannst es hier jederzeit ändern.</p>';
   const rows = done.map(id => ({id}));
   // Muskel-Karte
   const ws = weekSets(), lv = {}; for (const m in ws) lv[m] = level4(ws[m]);
@@ -873,8 +891,8 @@ function stretchSheet(id) {
 }
 
 /* ---------- Rendern & Navigation ---------- */
-const VIEWS = {start:viewStart, plan:viewPlan, "tag-a":() => viewTag("A"), "tag-b":() => viewTag("B"), "tag-c":() => viewTag("C"), training:viewTraining, dehnen:viewDehnen, kalender:viewKalender, mehr:viewMehr, uebungen:viewUebungen, level:viewLevel, fortschritt:viewLevel, wissen:viewWissen};
-const TAB_OF = {start:"start", plan:"plan", "tag-a":"plan", "tag-b":"plan", "tag-c":"plan", dehnen:"dehnen", kalender:"kalender", uebungen:"uebungen", level:"level", fortschritt:"level"};
+const VIEWS = {start:viewStart, plan:viewPlan, "tag-a":() => viewTag("A"), "tag-b":() => viewTag("B"), "tag-c":() => viewTag("C"), training:viewTraining, dehnen:viewDehnen, kalender:viewKalender, mehr:viewMehr, uebungen:viewUebungen, kilos:viewLevel, level:viewLevel, fortschritt:viewLevel, wissen:viewWissen};
+const TAB_OF = {start:"start", plan:"plan", "tag-a":"plan", "tag-b":"plan", "tag-c":"plan", dehnen:"dehnen", kalender:"kalender", uebungen:"uebungen", kilos:"kilos", level:"kilos", fortschritt:"kilos"};
 function currentView() { const v = location.hash.replace("#", ""); return VIEWS[v] ? v : "start"; }
 function render() {
   const v = currentView(); UI.needRender = false;
@@ -887,7 +905,14 @@ function render() {
 function softRender() { const a = document.activeElement; if (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && $("#main").contains(a)) { UI.needRender = true; return; } render(); }
 function go(h) { if (location.hash === "#" + h) render(); else location.hash = h; window.scrollTo(0, 0); }
 function openSheet(kind, arg) { UI.sheet = {kind, arg}; renderSheet(); $("#sheetWrap").hidden = false; }
-function renderSheet() { const s = UI.sheet; if (!s) return; $("#sheet").innerHTML = s.kind === "info" ? infoSheet(s.arg) : s.kind === "st" ? stretchSheet(s.arg) : daySheet(s.arg); }
+function renderSheet() { const s = UI.sheet; if (!s) return; $("#sheet").innerHTML = s.kind === "info" ? infoSheet(s.arg) : s.kind === "st" ? stretchSheet(s.arg) : s.kind === "wt" ? wtSheet(s.arg) : daySheet(s.arg); }
+// Kleines Fenster im Training: Gewicht schnell ändern
+function wtSheet(id) {
+  const t = todayKey(), kg = curKg(id, t);
+  return '<div class="sheet-top"><div><p class="eyebrow">Gewicht ändern</p><h2>' + esc(EX[id].name) + '</h2></div><button class="icon-btn" data-act="close" aria-label="Schließen">' + X_ICON + '</button></div>'
+    + '<div class="stepper"><button type="button" data-act="wt" data-d="-1" aria-label="Weniger Gewicht">−</button><input id="wtIn" inputmode="decimal" autocomplete="off" aria-label="Gewicht in kg" value="' + String(kg).replace(".", ",") + '"><span>kg</span><button type="button" data-act="wt" data-d="1" aria-label="Mehr Gewicht">+</button></div>'
+    + '<div id="lvBox">' + lvBox(id, t) + '</div><button class="btn primary" data-act="close">Fertig</button>';
+}
 function closeSheet() { UI.sheet = null; if (UI.confirm && UI.confirm.startsWith("del-")) UI.confirm = null; $("#sheetWrap").hidden = true; $("#sheet").innerHTML = ""; }
 let toastT = null;
 function toast(m, ms) { const t = $("#toast"); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, ms || 2600); }
@@ -915,10 +940,12 @@ function rowCtx(el) {
 }
 function updateProg() { const t = todayKey(), p = todayPlan(), bar = $(".prog"); if (bar && p) bar.outerHTML = progBar(p, t, UI.step); }
 // Gewicht geändert: Anzeige, Level und offene Sätze sofort anpassen
+// Gewicht im Bereich „Kilos“ merken
+function saveKg(id, kg, t) { if (!S.settings.kg) S.settings.kg = {}; S.settings.kg[id] = {kg, d:t}; changed("settings"); }
 function setWeight(kg) {
   const id = curEx(), t = todayKey(); if (!id || noKg(EX[id])) return;
   kg = Math.max(0, Math.round(kg * 10) / 10);
-  const w = ensureWorkout(t, todayPlan()); if (!w.wt) w.wt = {}; w.wt[id] = kg; changed("w-" + t);
+  const w = ensureWorkout(t, todayPlan()); if (!w.wt) w.wt = {}; w.wt[id] = kg; changed("w-" + t);   // gilt für heute; danach rechnet die App weiter
   const l = levelOf(id, score(id, kg, refReps(id, t)));
   if ($("#wtSum")) $("#wtSum").textContent = fmtNum(kg) + " kg";
   if ($("#lvSum")) $("#lvSum").innerHTML = badge(l);
@@ -947,6 +974,7 @@ document.addEventListener("change", e => {
   if (el.id === "chartSel") { UI.chartEx = el.value; render(); }
   else if (el.id === "startD" && /^\d{4}-\d{2}-\d{2}$/.test(el.value)) { S.settings.startDate = el.value; changed("settings"); toast("Plan-Start gespeichert"); }
   else if (el.id === "wtIn") { const v = num(el.value); if (v != null) { setWeight(v); el.value = String(v).replace(".", ","); } }
+  else if (el.matches(".kg-in")) { const v = num(el.value); if (v != null && v >= 0) { saveKg(el.dataset.ex, Math.round(v * 10) / 10, todayKey()); softRender(); } }
 });
 document.addEventListener("toggle", e => { if (e.target && e.target.id === "wt") UI.wtOpen = e.target.open; }, true);
 document.addEventListener("focusout", () => setTimeout(() => { if (UI.needRender) softRender(); }, 50));
@@ -958,7 +986,9 @@ document.addEventListener("click", async e => {
   switch (act) {
     case "go": closeSheet(); go(b.dataset.h); break;
     case "uxf": UI.uxTag = b.dataset.v; render(); break;     // Filter auf der Übungen-Seite
-    case "lvf": UI.lvTag = b.dataset.v; render(); break;     // Tag auf der Level-Seite
+    case "lvf": UI.lvTag = b.dataset.v; render(); break;     // Tag auf der Kilos-Seite
+    case "kgs": { const id = b.dataset.ex, ex = EX[id]; saveKg(id, Math.max(0, Math.round((curKg(id, t) + (+b.dataset.d) * (ex.inc || 1)) * 10) / 10), t); render(); break; }
+    case "wtsheet": { const id = curEx(); if (id) openSheet("wt", id); break; }
     case "start": {
       const p = b.dataset.p, w = S.workouts[t];
       if (w && hasLogged(w) && w.plan !== p) toast("Heute läuft schon " + PLAN[w.plan].name);
