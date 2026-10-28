@@ -694,7 +694,7 @@ function viewTraining() {
   if (!noKg(ex)) {
     // Gewicht einstellen: aufklappen mit dem Pfeil
     const kg = curKg(id, t), l = levelOf(id, score(id, kg, refReps(id, t)));
-    h += '<details class="wt" id="wt"' + (UI.wtOpen ? " open" : "") + '><summary><span class="arr" aria-hidden="true">▸</span><span class="grow"><span class="eyebrow">Gewicht einstellen</span><span><b id="wtSum">' + fmtNum(kg) + ' kg</b> <span class="small muted">' + esc(ex.start.wie.trim()) + '</span></span></span><span id="lvSum">' + badge(l) + '</span></summary>'
+    h += '<details class="wt" id="wt"' + (UI.wtOpen ? " open" : "") + '><summary><span class="arr" aria-hidden="true">▸</span><span class="grow"><span class="eyebrow">Gewicht einstellen · hier tippen</span><span><b id="wtSum">' + fmtNum(kg) + ' kg</b> <span class="small muted">' + esc(ex.start.wie.trim()) + '</span></span></span><span id="lvSum">' + badge(l) + '</span></summary>'
       + '<div class="wt-body"><div class="stepper"><button type="button" data-act="wt" data-d="-1" aria-label="Weniger Gewicht">−</button><input id="wtIn" inputmode="decimal" autocomplete="off" aria-label="Gewicht in kg" value="' + String(kg).replace(".", ",") + '"><span>kg</span><button type="button" data-act="wt" data-d="1" aria-label="Mehr Gewicht">+</button></div>'
       + '<div id="lvBox">' + lvBox(id, t) + '</div><p class="hint small">' + sg.text + '</p></div></details>';
   } else {
@@ -810,6 +810,7 @@ function viewLevel() {
   // Übungen eines Tages mit Kilos und Level
   h += '<div class="daychips seg3" role="group" aria-label="Trainingstag">' + Object.keys(PLAN).map(p => '<button type="button" data-act="lvf" data-v="' + p + '" class="' + (p === UI.lvTag ? "on" : "") + '" aria-pressed="' + (p === UI.lvTag) + '">' + p + ' · ' + PLAN[p].name.split(" ")[0] + '</button>').join("") + '</div>';
   PLAN[UI.lvTag].areas.forEach(a => { h += '<div class="card"><div class="area-h"><h3>' + a.n + '</h3><span class="small muted">' + a.ex.filter(id => bestEver(id) != null).length + '/' + a.ex.length + ' gemacht</span></div><ul class="list">' + a.ex.map(lvRow).join("") + '</ul></div>'; });
+  h += '<div class="card note"><p class="small"><b>Wo stelle ich die Kilos ein?</b> Im Training: Bei jeder Übung oben auf den Kasten <b>„Gewicht einstellen“</b> tippen, dann mit <b>−</b> und <b>+</b> ändern. Hier siehst du danach, wie weit du bist.</p></div>';
   h += '<p class="small muted">Der Balken zeigt, wie weit du bis zum nächsten Level bist. Das Level zählt immer dein bester Satz bisher.</p>';
   const rows = done.map(id => ({id}));
   // Muskel-Karte
