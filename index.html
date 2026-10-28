@@ -552,9 +552,8 @@ function suggest(id, k) {
   if (below === 1) return {kg, text:"<b>Gewicht halten:</b> " + fmtNum(kg) + " kg – alle Sätze in " + ex.min + "–" + ex.max + " Wdh. bringen."};
   return {kg, text:"<b>Gleiches Gewicht:</b> " + fmtNum(kg) + " kg – pro Satz 1 Wdh. mehr als letztes Mal." + side};
 }
-// Im Bereich „Kilos“ eingestellt? Gilt, bis du die Übung wieder trainiert hast – danach rechnet die App selbst weiter.
-function manualKg(id, t) { const m = (S.settings.kg || {})[id]; if (!m) return null; const h = history(id, t); return (!h.length || m.d >= h[0].date) ? m.kg : null; }
-function curKg(id, t) { const w = S.workouts[t]; if (w && w.wt && w.wt[id] != null) return w.wt[id]; const mk = manualKg(id, t); if (mk != null) return mk; const sg = suggest(id, t); return sg.kg != null ? sg.kg : (EX[id].start ? EX[id].start.kg : 0); }
+// Gewicht einer Übung: genau das, was du unter „Kilos“ einstellst (sonst das Startgewicht)
+function curKg(id, t) { const m = (S.settings.kg || {})[id]; if (m) return m.kg; const w = S.workouts[t]; if (w && w.wt && w.wt[id] != null) return w.wt[id]; return EX[id].start ? EX[id].start.kg : 0; }
 function refReps(id, t) { const ss = okSets(S.workouts[t], id); if (ss.length) return Math.max(...ss.map(s => num(s.r))); const e = EX[id]; return Math.round((e.min + e.max) / 2); }
 function lvBox(id, t) {
   const ex = EX[id], kg = curKg(id, t), r = refReps(id, t), l = levelOf(id, score(id, kg, r));
@@ -666,7 +665,7 @@ function viewPlan() {
     h += '<button class="card" style="text-align:left" data-act="go" data-h="tag-' + p.toLowerCase() + '"><div class="day-head"><div class="plate">' + p + '</div><div><p class="eyebrow">' + P.tag + '</p><h2>' + P.name + '</h2></div></div>'
       + '<div class="chips">' + P.areas.map(a => '<span class="chip">' + a.n + ' · 3</span>').join("") + '</div></button>';
   }
-  return h + '<div class="card prose"><h3>So läuft jede Einheit</h3><ol><li>5–10 Min aufwärmen (Rad, Laufband).</li><li>Die App zeigt dir immer nur die aktuelle Übung mit Video.</li><li>Gewicht über den Pfeil einstellen, Wdh. eintragen, abhaken – der Pausen-Timer startet von selbst.</li><li>Aufhören, wenn noch 1–3 saubere Wdh. gehen würden.</li><li>Am Ende „Training abschließen“ – dann steht es im Kalender.</li></ol></div></div>';
+  return h + '<div class="card prose"><h3>So läuft jede Einheit</h3><ol><li>5–10 Min aufwärmen (Rad, Laufband).</li><li>Die App zeigt dir immer nur die aktuelle Übung mit Video.</li><li>Gewicht vorher unter „Kilos“ einstellen. Im Training Wdh. eintragen, abhaken – der Pausen-Timer startet von selbst.</li><li>Aufhören, wenn noch 1–3 saubere Wdh. gehen würden.</li><li>Am Ende „Training abschließen“ – dann steht es im Kalender.</li></ol></div></div>';
 }
 
 /* ---------- Seite: TAG (Übungen eines Tages) ---------- */
@@ -707,7 +706,7 @@ function viewTraining() {
   if (!noKg(ex)) {
     // Gewicht: wird im Bereich „Kilos“ eingestellt – hier nur anzeigen (+ schnell ändern)
     const kg = curKg(id, t), l = levelOf(id, score(id, kg, refReps(id, t)));
-    h += '<div class="wt-line"><span class="grow"><span class="eyebrow">Dein Gewicht</span><span><b id="wtSum">' + fmtNum(kg) + ' kg</b> <span class="small muted">' + esc(ex.start.wie.trim()) + '</span></span></span><span id="lvSum">' + badge(l) + '</span><button type="button" class="btn small-btn" data-act="wtsheet">ändern</button></div><p class="hint small">' + sg.text + '</p>';
+    h += '<div class="wt-line"><span class="grow"><span class="eyebrow">Dein Gewicht</span><span><b id="wtSum">' + fmtNum(kg) + ' kg</b> <span class="small muted">' + esc(ex.start.wie.trim()) + '</span></span></span><span id="lvSum">' + badge(l) + '</span><button type="button" class="btn small-btn" data-act="wtsheet">ändern</button></div>';
   } else {
     const best = bestOf(w, id) || bestEver(id, t) || 0, l = levelOf(id, best);
     h += '<p class="hint">' + sg.text + '</p><div class="card"><div class="area-h"><h3>Dein Level</h3>' + badge(l) + '</div>' + meter(l) + '<p class="small muted">' + (l >= 5 ? "Höchstes Level!" : "Für " + badgeTxt(l + 1) + ": " + ex.std[l] + (ex.zeit ? " Sek." : " Wdh.") + " in einem Satz") + '</p></div>';
@@ -781,6 +780,7 @@ function daySheet(k) {
 /* ---------- Seite: MEHR ---------- */
 function viewMehr() {
   let h = '<div class="stack"><h1>Mehr</h1><div class="card"><ul class="list">'
+    + '<li><button class="row" data-act="go" data-h="statistik"><span><b>Statistik</b><small>Muskeln, Kraft-Verlauf, Körpergewicht</small></span><span class="num">→</span></button></li>'
     + '<li><button class="row" data-act="go" data-h="wissen"><span><b>Wissen</b><small>Regeln, Level-Erklärung, Eiweiß, Sicherheit</small></span><span class="num">→</span></button></li></ul></div>';
   if (!IN_CLAUDE) h += '<div class="card prose"><h3>Als App aufs Handy</h3><p class="small"><b>iPhone (Safari):</b> Teilen-Symbol → „Zum Home-Bildschirm“.<br><b>Android (Chrome):</b> ⋮ → „Zum Startbildschirm hinzufügen“.</p><p class="small muted">Deine Daten bleiben auf diesem Handy. Mach ab und zu eine Sicherung (unten).</p></div>';
   h += '<div class="card"><h3>Einstellungen</h3><div class="field"><label for="startD">Plan-Start (ab da zählen Woche 1 und die Check-Liste)</label><input id="startD" type="date" value="' + esc(start()) + '"></div>'
@@ -801,35 +801,28 @@ function lastSet(id) {
 // Wie weit bist du im aktuellen Level? (0–100 %)
 function lvProgress(id, sc, l) { if (l >= 5) return 100; const std = EX[id].std, lo = l > 0 ? std[l - 1] : 0, hi = std[l]; return Math.max(4, Math.min(100, Math.round((sc - lo) / (hi - lo) * 100))); }
 function lvRow(id) {
-  const ex = EX[id], b = bestEver(id), unit = ex.zeit ? " Sek." : " Wdh.";
-  if (!noKg(ex)) {   // Übung mit Gewicht: hier einstellen
-    const t = todayKey(), kg = curKg(id, t), r = 10, sc = score(id, kg, r), l = levelOf(id, sc), ls = lastSet(id);
-    const nx = l >= 5 ? "Höchstes Level 👑" : "Für " + badgeTxt(l + 1) + ": ca. " + fmtNum(needKg(id, l + 1, r)) + " kg × 10";
-    return '<li class="kgrow"><div class="kg-top"><button type="button" class="link kg-name" data-act="info" data-ex="' + id + '">' + esc(ex.name) + '</button>' + badge(l) + '</div>'
-      + '<div class="stepper sm"><button type="button" data-act="kgs" data-ex="' + id + '" data-d="-1" aria-label="Weniger Gewicht ' + esc(ex.name) + '">−</button><input class="kg-in" data-ex="' + id + '" inputmode="decimal" autocomplete="off" aria-label="Gewicht ' + esc(ex.name) + ' in kg" value="' + String(kg).replace(".", ",") + '"><span>kg' + esc(ex.start.wie) + '</span><button type="button" data-act="kgs" data-ex="' + id + '" data-d="1" aria-label="Mehr Gewicht ' + esc(ex.name) + '">+</button></div>'
-      + '<span class="lvbar" aria-hidden="true"><i style="width:' + lvProgress(id, sc, l) + '%"></i></span><small class="muted">' + nx + (ls ? ' · Zuletzt: ' + fmtNum(ls.kg) + ' kg × ' + ls.r : ' · Noch nicht trainiert') + '</small></li>';
+  const ex = EX[id];
+  if (noKg(ex)) {   // ohne Gewicht (z. B. Plank): nur Level vom besten Satz
+    const bb = bestEver(id);
+    return '<li class="kgrow"><div class="kg-top"><button type="button" class="link kg-name" data-act="info" data-ex="' + id + '">' + esc(ex.name) + '</button>' + (bb != null ? badge(levelOf(id, bb)) : '') + '</div><small class="muted">Ohne Gewicht – ' + (ex.zeit ? "Sekunden" : "Wiederholungen") + ' trägst du im Training ein.</small></li>';
   }
-  if (b == null) return '<li><button type="button" class="row" data-act="info" data-ex="' + id + '"><span><b>' + esc(ex.name) + '</b><small>Noch nicht gemacht · ' + startTxt(id) + '</small></span><span class="lv off">–</span></button></li>';
-  const l = levelOf(id, b), ls = lastSet(id);
-  const now = noKg(ex) ? "Bester Satz: " + fmtNum(b) + unit : "Zuletzt: " + (ls ? fmtNum(ls.kg) + " kg × " + ls.r : "–");
-  const nx = l >= 5 ? "Höchstes Level erreicht 👑" : "Nächstes: " + badgeTxt(l + 1) + (noKg(ex) ? " ab " + ex.std[l] + unit : " ab ca. " + fmtNum(needKg(id, l + 1, 10)) + " kg × 10");
-  return '<li><button type="button" class="row" data-act="info" data-ex="' + id + '"><span><b>' + esc(ex.name) + '</b><small>' + now + '</small><span class="lvbar" aria-hidden="true"><i style="width:' + lvProgress(id, b, l) + '%"></i></span><small>' + nx + '</small></span>' + badge(l) + '</button></li>';
+  const kg = curKg(id, todayKey()), l = levelOf(id, score(id, kg, 10));
+  return '<li class="kgrow"><div class="kg-top"><button type="button" class="link kg-name" data-act="info" data-ex="' + id + '">' + esc(ex.name) + '</button>' + badge(l) + '</div>'
+    + '<div class="stepper sm"><button type="button" data-act="kgs" data-ex="' + id + '" data-d="-1" aria-label="Weniger Gewicht ' + esc(ex.name) + '">−</button><input class="kg-in" data-ex="' + id + '" inputmode="decimal" autocomplete="off" aria-label="Gewicht ' + esc(ex.name) + ' in kg" value="' + String(kg).replace(".", ",") + '"><span>kg' + esc(ex.start.wie) + '</span><button type="button" data-act="kgs" data-ex="' + id + '" data-d="1" aria-label="Mehr Gewicht ' + esc(ex.name) + '">+</button></div>'
+    + (l < 5 ? '<small class="muted">Nächstes Level ' + badgeTxt(l + 1) + ' ab ' + fmtNum(needKg(id, l + 1, 10)) + ' kg</small>' : '<small class="muted">Höchstes Level 👑</small>') + '</li>';
 }
 function viewLevel() {
-  const ids = Object.keys(EX), done = ids.filter(id => bestEver(id) != null), lvs = done.map(id => levelOf(id, bestEver(id)));
-  const avg = lvs.length ? Math.floor(lvs.reduce((a, b) => a + b, 0) / lvs.length + 1e-9) : 0;
   if (!UI.lvTag) { const n = nextUp(); UI.lvTag = n ? n.plan : "A"; }
-  let h = '<div class="stack"><div><p class="eyebrow">Gewichte einstellen & Level</p><h1>Kilos</h1></div>';
-  // Gesamt-Level
-  h += '<div class="card ink"><p class="eyebrow">Dein Gesamt-Level</p>';
-  if (done.length) h += '<div class="big-row"><span class="big">' + LV[avg].e + '</span><span style="padding-bottom:4px"><b style="font-size:26px">' + LV[avg].n + '</b><br><span class="muted">' + done.length + ' von ' + ids.length + ' Übungen gemacht</span></span></div><div class="chips">' + LV.map((x, i) => { const n = lvs.filter(v => v === i).length; return n ? '<span class="chip">' + x.e + ' ' + x.n + ': ' + n + '</span>' : ''; }).join("") + '</div>';
-  else h += '<p>Noch nichts eingetragen. Nach deinem ersten Training siehst du hier für jede Übung, wie stark du bist.</p>';
-  h += '<p class="small muted">🥬 Lauch → 🐣 Rookie → ⚙️ Maschine → 🦍 Beast → 🐺 Alpha → 👑 Legende</p></div>';
-  // Übungen eines Tages: Kilos einstellen + Level
-  h += '<p class="small">Stell hier mit <b>−</b> und <b>+</b> ein, mit wie viel Kilo du trainierst. Das Training übernimmt das automatisch. Das Abzeichen zeigt, wie gut das Gewicht bei 10 Wdh. ist.</p>';
+  let h = '<div class="stack"><h1>Kilos</h1><p class="muted">Stell mit <b>−</b> und <b>+</b> ein, mit wie viel Kilo du trainierst. Das Abzeichen zeigt dein Level.</p>';
   h += '<div class="daychips seg3" role="group" aria-label="Trainingstag">' + Object.keys(PLAN).map(p => '<button type="button" data-act="lvf" data-v="' + p + '" class="' + (p === UI.lvTag ? "on" : "") + '" aria-pressed="' + (p === UI.lvTag) + '">' + p + ' · ' + PLAN[p].name.split(" ")[0] + '</button>').join("") + '</div>';
-  PLAN[UI.lvTag].areas.forEach(a => { h += '<div class="card"><div class="area-h"><h3>' + a.n + '</h3><span class="small muted">' + a.ex.filter(id => bestEver(id) != null).length + '/' + a.ex.length + ' gemacht</span></div><ul class="list">' + a.ex.map(lvRow).join("") + '</ul></div>'; });
-  h += '<p class="small muted">Der Balken zeigt, wie weit du bis zum nächsten Level bist. Nach jedem Training schlägt die App selbst das nächste Gewicht vor – du kannst es hier jederzeit ändern.</p>';
+  PLAN[UI.lvTag].areas.forEach(a => { h += '<div class="card"><div class="area-h"><h3>' + a.n + '</h3></div><ul class="list">' + a.ex.map(lvRow).join("") + '</ul></div>'; });
+  return h + '<p class="small muted">🥬 Lauch → 🐣 Rookie → ⚙️ Maschine → 🦍 Beast → 🐺 Alpha → 👑 Legende</p></div>';
+}
+
+/* ---------- Seite: STATISTIK (unter Mehr) ---------- */
+function viewStatistik() {
+  const done = Object.keys(EX).filter(id => bestEver(id) != null);
+  let h = '<div class="stack"><button class="link" data-act="go" data-h="mehr">← Mehr</button><h1>Statistik</h1>';
   const rows = done.map(id => ({id}));
   // Muskel-Karte
   const ws = weekSets(), lv = {}; for (const m in ws) lv[m] = level4(ws[m]);
@@ -869,7 +862,7 @@ function viewUebungen() {
 function viewWissen() {
   const e = (S.body.entries || []).filter(x => num(x.kg) != null).sort((a, b) => a.d < b.d ? 1 : -1)[0], kg = e ? num(e.kg) : 70;
   return '<div class="stack"><button class="link" data-act="go" data-h="mehr">← Mehr</button><h1>Wissen</h1>'
-    + '<div class="card prose"><h3>Die 5 Grundregeln</h3><ol><li><b>Technik vor Gewicht.</b> Woche 1–2 leicht starten.</li><li><b>Doppelte Progression:</b> Erst Wdh. steigern, dann Gewicht. Die App rechnet mit.</li><li><b>Fast ans Limit:</b> aufhören, wenn noch 1–3 saubere Wdh. gehen würden.</li><li><b>Pausen 1,5–2 Min.</b> Unter 1 Min. bremst etwas, über 1,5 Min. kaum Unterschied.</li><li><b>Dranbleiben schlägt alles.</b> Einmal fehlen ist kein Drama.</li></ol></div>'
+    + '<div class="card prose"><h3>Die 5 Grundregeln</h3><ol><li><b>Technik vor Gewicht.</b> Woche 1–2 leicht starten.</li><li><b>Doppelte Progression:</b> Erst Wdh. steigern. Schaffst du überall die obere Zahl, unter „Kilos“ etwas mehr Gewicht einstellen.</li><li><b>Fast ans Limit:</b> aufhören, wenn noch 1–3 saubere Wdh. gehen würden.</li><li><b>Pausen 1,5–2 Min.</b> Unter 1 Min. bremst etwas, über 1,5 Min. kaum Unterschied.</li><li><b>Dranbleiben schlägt alles.</b> Einmal fehlen ist kein Drama.</li></ol></div>'
     + '<div class="card prose"><h3>So funktionieren die Level</h3><p>Aus Gewicht × Wdh. schätzt die App, wie viel du 1× schaffen würdest. Das vergleicht sie mit Daten von strengthlevel.com für Männer mit ca. 70 kg.</p><div class="tbl-wrap"><table><tbody>' + LV.map(x => '<tr><td>' + x.e + ' <b>' + x.n + '</b></td><td>' + x.d + '</td></tr>').join("") + '</tbody></table></div><p class="small muted">Maschinen sind in jedem Studio etwas anders schwer – nimm die Level als Spaß-Richtwert. Plank: eigene grobe Einteilung (20 / 40 / 60 / 90 / 120 Sek.).</p></div>'
     + '<div class="card prose"><h3>Essen & Schlafen</h3><p>Eiweiß 1,4–2,0 g pro kg Körpergewicht. Bei ' + fmtNum(kg) + ' kg: ca. <b>' + Math.round(kg * 1.4) + '–' + Math.round(kg * 2) + ' g am Tag</b>, verteilt auf 3–5 Mahlzeiten. Dazu 7–9 Std. Schlaf.</p><p class="small muted">Beispiele (ca.): Magerquark 250 g = 30 g · Hähnchen 150 g = 35 g · 3 Eier = 20 g · Skyr 150 g = 16 g.</p></div>'
     + '<div class="card note prose"><h3>⚠️ Sicherheit</h3><ul><li>Brennen im Muskel ist normal. <b>Stechender Schmerz oder Schmerz im Gelenk: sofort aufhören.</b></li><li>Bei Verletzungen erst mit dem Physio abklären, was schon geht.</li><li>Lass dir die Maschinen einmal von einem Trainer zeigen.</li></ul></div>'
@@ -891,14 +884,14 @@ function stretchSheet(id) {
 }
 
 /* ---------- Rendern & Navigation ---------- */
-const VIEWS = {start:viewStart, plan:viewPlan, "tag-a":() => viewTag("A"), "tag-b":() => viewTag("B"), "tag-c":() => viewTag("C"), training:viewTraining, dehnen:viewDehnen, kalender:viewKalender, mehr:viewMehr, uebungen:viewUebungen, kilos:viewLevel, level:viewLevel, fortschritt:viewLevel, wissen:viewWissen};
-const TAB_OF = {start:"start", plan:"plan", "tag-a":"plan", "tag-b":"plan", "tag-c":"plan", dehnen:"dehnen", kalender:"kalender", uebungen:"uebungen", kilos:"kilos", level:"kilos", fortschritt:"kilos"};
+const VIEWS = {start:viewStart, plan:viewPlan, "tag-a":() => viewTag("A"), "tag-b":() => viewTag("B"), "tag-c":() => viewTag("C"), training:viewTraining, dehnen:viewDehnen, kalender:viewKalender, mehr:viewMehr, uebungen:viewUebungen, kilos:viewLevel, level:viewLevel, fortschritt:viewStatistik, statistik:viewStatistik, wissen:viewWissen};
+const TAB_OF = {start:"start", plan:"plan", "tag-a":"plan", "tag-b":"plan", "tag-c":"plan", dehnen:"dehnen", kalender:"kalender", uebungen:"uebungen", kilos:"kilos", level:"kilos"};
 function currentView() { const v = location.hash.replace("#", ""); return VIEWS[v] ? v : "start"; }
 function render() {
   const v = currentView(); UI.needRender = false;
   $("#main").innerHTML = VIEWS[v]();
   document.body.classList.toggle("focus", v === "training");
-  if ($("#moreBtn")) { if (v === "mehr" || v === "wissen") $("#moreBtn").setAttribute("aria-current", "page"); else $("#moreBtn").removeAttribute("aria-current"); }
+  if ($("#moreBtn")) { if (v === "mehr" || v === "wissen" || v === "statistik" || v === "fortschritt") $("#moreBtn").setAttribute("aria-current", "page"); else $("#moreBtn").removeAttribute("aria-current"); }
   document.querySelectorAll(".tabs a").forEach(a => { if (a.dataset.tab === TAB_OF[v]) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   if (UI.sheet) renderSheet();
 }
@@ -945,7 +938,8 @@ function saveKg(id, kg, t) { if (!S.settings.kg) S.settings.kg = {}; S.settings.
 function setWeight(kg) {
   const id = curEx(), t = todayKey(); if (!id || noKg(EX[id])) return;
   kg = Math.max(0, Math.round(kg * 10) / 10);
-  const w = ensureWorkout(t, todayPlan()); if (!w.wt) w.wt = {}; w.wt[id] = kg; changed("w-" + t);   // gilt für heute; danach rechnet die App weiter
+  const w = ensureWorkout(t, todayPlan()); if (!w.wt) w.wt = {}; w.wt[id] = kg; changed("w-" + t);
+  saveKg(id, kg, t);   // bleibt so, bis du es selbst änderst
   const l = levelOf(id, score(id, kg, refReps(id, t)));
   if ($("#wtSum")) $("#wtSum").textContent = fmtNum(kg) + " kg";
   if ($("#lvSum")) $("#lvSum").innerHTML = badge(l);
