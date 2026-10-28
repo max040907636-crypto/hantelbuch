@@ -3,7 +3,7 @@
    Aufgabe: Die App auf dem Handy speichern, damit sie im Gym auch mit
    schlechtem Netz startet. Videos werden NICHT gespeichert (gehen nur mit Internet).
    ===================================================================== */
-const VERSION = "hantelbuch-v3";             // bei Änderungen hochzählen
+const VERSION = "hantelbuch-v3.1";             // bei Änderungen hochzählen
 const DATEIEN = ["./", "index.html", "manifest.webmanifest", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png"];
 
 // 1) Installieren: App-Dateien speichern

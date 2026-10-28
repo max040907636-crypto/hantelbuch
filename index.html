@@ -153,6 +153,8 @@ p{margin:0}
 .prog i.now{background:var(--muted)}
 .tr-top{display:flex;align-items:center;gap:10px}
 .tr-top .grow{flex:1;min-width:0}
+/* Deutlicher Zurück-Knopf oben im Training */
+.back-btn{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border-radius:10px;border:2px solid var(--fg);background:var(--surface);color:var(--fg);font-weight:700;font-size:16px;flex:none}
 .hint{font-size:15px;padding:10px 12px;border-radius:10px;background:var(--soft)}
 .prev{font-size:13px;color:var(--muted)}
 /* Gewicht: zum Aufklappen mit Pfeil */
@@ -663,7 +665,7 @@ function viewTraining() {
   const list = planEx(p), w = S.workouts[t];
   if (UI.step == null) UI.step = firstOpen(p, t);
   UI.step = Math.max(0, Math.min(list.length, UI.step));
-  let h = '<div class="stack"><div class="tr-top"><button class="icon-btn" data-act="exit" aria-label="Training verlassen">' + X_ICON + '</button><div class="grow"><p class="eyebrow">' + PLAN[p].name + (UI.step < list.length ? ' · Übung ' + (UI.step + 1) + ' von ' + list.length : ' · Fertig') + '</p></div></div>' + progBar(p, t, UI.step);
+  let h = '<div class="stack"><div class="tr-top"><button class="back-btn" data-act="exit" aria-label="Zurück – dein Fortschritt bleibt gespeichert">← Zurück</button><div class="grow"><p class="eyebrow">' + PLAN[p].name + (UI.step < list.length ? ' · Übung ' + (UI.step + 1) + ' von ' + list.length : ' · Fertig') + '</p></div></div>' + progBar(p, t, UI.step);
   if (UI.step >= list.length) {   // Zusammenfassung
     h += '<h1>Geschafft?</h1><div class="card"><ul class="list">' + list.map((id, i) => { const n = okSets(w, id).length, need = setsFor(id, t); return '<li><button class="row" data-act="jump" data-i="' + i + '"><span><b>' + esc(EX[id].name) + '</b><small>' + areaOf(p, id) + '</small></span><span class="num">' + (n >= need ? "✓" : n + "/" + need) + '</span></button></li>'; }).join("") + '</ul></div>'
       + '<div class="card"><h3>Wie war\'s?</h3><div class="feel">' + ["1 😫", "2 😕", "3 🙂", "4 💪", "5 🔥"].map((l, i) => '<button type="button" data-act="feel" data-v="' + (i + 1) + '" class="' + (w && w.feel === i + 1 ? "on" : "") + '">' + l + '</button>').join("") + '</div>'
@@ -904,9 +906,10 @@ document.addEventListener("click", async e => {
       const p = b.dataset.p, w = S.workouts[t];
       if (w && hasLogged(w) && w.plan !== p) toast("Heute läuft schon " + PLAN[w.plan].name);
       else { UI.pick = p; if (w) { w.plan = p; if (["manual", "missed", "excused"].includes(w.status)) w.status = "draft"; changed("w-" + t); } }
+      UI.from = currentView() === "training" ? (UI.from || "start") : currentView();   // merken, woher man kam
       UI.step = null; UI.wtOpen = false; go("training"); break;
     }
-    case "exit": stopTimer(); go("start"); break;
+    case "exit": stopTimer(); go(UI.from || "start"); toast("Fortschritt gespeichert – mach später einfach weiter"); break;
     case "next": UI.step++; UI.wtOpen = false; stopTimer(); render(); window.scrollTo(0, 0); break;
     case "prev": UI.step = Math.max(0, UI.step - 1); UI.wtOpen = false; render(); window.scrollTo(0, 0); break;
     case "jump": UI.step = +b.dataset.i; UI.wtOpen = false; render(); window.scrollTo(0, 0); break;
