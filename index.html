@@ -57,6 +57,9 @@ a{color:var(--fg)}
 .top-in{max-width:600px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;display:flex;align-items:center;gap:10px}
 .brand{font-family:var(--f-display);font-weight:700;font-size:24px;letter-spacing:.06em;text-transform:uppercase;line-height:1;display:flex;align-items:center;gap:8px}
 .brand svg{width:28px;height:18px}
+/* Kleine Handys: Kopfzeile kompakter, damit alle Knöpfe passen */
+@media (max-width:440px){.top-in{gap:8px}.brand{font-size:20px;letter-spacing:.04em;gap:6px}.brand svg{width:24px;height:16px}.sync span{display:none}}
+@media (max-width:370px){.brand{font-size:18px}.icon-btn{width:38px;height:38px}}
 .sync{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);min-width:0}
 .sync i{width:9px;height:9px;border-radius:50%;border:2px solid var(--muted);flex:none}
 .sync.cloud i{background:var(--fg);border-color:var(--fg)}
@@ -207,6 +210,15 @@ textarea{width:100%;min-height:72px;border-radius:10px;border:1px solid var(--li
 .daychips button.on{background:var(--fg);color:var(--inv);border-color:var(--fg)}
 .daychips button.today{box-shadow:0 0 0 2px var(--fg) inset}
 .daychips button.on.today{box-shadow:none}
+/* Filter-Knöpfe (3 bzw. 4 nebeneinander) */
+.daychips.seg3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.daychips.seg4{grid-template-columns:repeat(4,minmax(0,1fr))}
+/* Level-Seite: Fortschrittsbalken bis zum nächsten Level */
+.lvbar{display:block;height:8px;border-radius:4px;background:var(--line);margin:6px 0 4px;overflow:hidden}
+.lvbar i{display:block;height:100%;background:var(--fg);border-radius:4px}
+.lv.off{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.card.ink .chip{border-color:var(--inv);color:var(--inv)}
+.icon-btn[aria-current="page"]{background:var(--fg);color:var(--inv);border-color:var(--fg)}
 .play{width:40px;height:40px;border-radius:50%;background:var(--fg);color:var(--inv);display:grid;place-items:center;font-size:14px;flex:none}
 
 /* Fortschritt */
@@ -226,7 +238,7 @@ td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
 
 /* Tabs */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--bg);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
-.tabs-in{max-width:600px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));height:var(--nav-h)}
+.tabs-in{max-width:600px;margin:0 auto;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));height:var(--nav-h)}
 .tabs a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-decoration:none;color:var(--muted);font-size:11px;font-weight:700}
 .tabs a svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .tabs a[aria-current="page"]{color:var(--fg)}
@@ -264,6 +276,7 @@ td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
   <div class="top-in">
     <div class="brand"><svg viewBox="0 0 28 18" aria-hidden="true"><rect x="1" y="8" width="26" height="2" rx="1" fill="currentColor"/><rect x="4" y="2" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="20" y="2" width="4" height="14" rx="1.5" fill="currentColor"/></svg>Hantelbuch</div>
     <div class="sync" id="sync"><i></i><span>Lädt…</span></div>
+    <a class="icon-btn" id="moreBtn" href="#mehr" aria-label="Mehr: Einstellungen, Sicherung, Wissen" title="Mehr"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></a>
     <button class="icon-btn" id="themeBtn" type="button" aria-label="Hell/Dunkel umschalten" title="Hell/Dunkel"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
     <button class="icon-btn" id="fsBtn" type="button" aria-label="Vollbild" title="Vollbild"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
   </div>
@@ -283,9 +296,10 @@ td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
   <div class="tabs-in">
     <a href="#start" data-tab="start"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Start</a>
     <a href="#plan" data-tab="plan"><svg viewBox="0 0 24 24"><path d="M3 12h3M18 12h3M6 8v8M18 8v8M9 6v12M15 6v12M9 12h6"/></svg>Plan</a>
+    <a href="#uebungen" data-tab="uebungen"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M10 9l5 3-5 3z"/></svg>Übungen</a>
+    <a href="#level" data-tab="level"><svg viewBox="0 0 24 24"><path d="M3 20h18M5 16l4-5 4 3 6-8"/></svg>Level</a>
     <a href="#dehnen" data-tab="dehnen"><svg viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="2"/><path d="M12 7v6l-4 8M12 13l4 8M5 9l7-1 7 1"/></svg>Dehnen</a>
     <a href="#kalender" data-tab="kalender"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 15l2 2 4-4"/></svg>Kalender</a>
-    <a href="#mehr" data-tab="mehr"><svg viewBox="0 0 24 24"><path d="M3 20h18M5 16l4-5 4 3 6-8"/></svg>Mehr</a>
   </div>
 </nav>
 
@@ -756,7 +770,6 @@ function daySheet(k) {
 /* ---------- Seite: MEHR ---------- */
 function viewMehr() {
   let h = '<div class="stack"><h1>Mehr</h1><div class="card"><ul class="list">'
-    + '<li><button class="row" data-act="go" data-h="fortschritt"><span><b>Fortschritt & Level</b><small>Deine Level, Muskeln, Kraft, Körpergewicht</small></span><span class="num">→</span></button></li>'
     + '<li><button class="row" data-act="go" data-h="wissen"><span><b>Wissen</b><small>Regeln, Level-Erklärung, Eiweiß, Sicherheit</small></span><span class="num">→</span></button></li></ul></div>';
   if (!IN_CLAUDE) h += '<div class="card prose"><h3>Als App aufs Handy</h3><p class="small"><b>iPhone (Safari):</b> Teilen-Symbol → „Zum Home-Bildschirm“.<br><b>Android (Chrome):</b> ⋮ → „Zum Startbildschirm hinzufügen“.</p><p class="small muted">Deine Daten bleiben auf diesem Handy. Mach ab und zu eine Sicherung (unten).</p></div>';
   h += '<div class="card"><h3>Einstellungen</h3><div class="field"><label for="startD">Plan-Start (ab da zählen Woche 1 und die Check-Liste)</label><input id="startD" type="date" value="' + esc(start()) + '"></div>'
@@ -766,15 +779,39 @@ function viewMehr() {
   return h + '</div></div>';
 }
 
-/* ---------- Seite: FORTSCHRITT ---------- */
-function viewFortschritt() {
-  let h = '<div class="stack"><button class="link" data-act="go" data-h="mehr">← Mehr</button><h1>Fortschritt</h1>';
-  // Deine Level pro Übung
-  const rows = Object.keys(EX).map(id => ({id, b:bestEver(id)})).filter(x => x.b != null);
-  h += '<div class="card"><h3>Deine Level</h3>';
-  if (!rows.length) h += '<p class="small muted">Nach deinem ersten Training siehst du hier für jede Übung dein Level – von 🥬 Lauch bis 👑 Legende.</p>';
-  else h += '<ul class="list">' + rows.map(x => { const ex = EX[x.id], l = levelOf(x.id, x.b), nx = l >= 5 ? "Höchstes Level" : noKg(ex) ? "Nächstes: " + ex.std[l] + (ex.zeit ? " Sek." : " Wdh.") : "Nächstes ab ca. " + fmtNum(needKg(x.id, l + 1, 10)) + " kg × 10"; return '<li><button class="row" data-act="info" data-ex="' + x.id + '"><span><b>' + esc(ex.name) + '</b><small>' + nx + '</small></span>' + badge(l) + '</button></li>'; }).join("") + '</ul>';
-  h += '</div>';
+/* ---------- Seite: LEVEL & KILOS – wie weit bist du? ---------- */
+// Bester Satz vom letzten Training mit dieser Übung
+function lastSet(id) {
+  const h = history(id, addDays(todayKey(), 1)); if (!h.length) return null;
+  let best = null, bs = -1;
+  okSets(h[0], id).forEach(x => { const sc = score(id, num(x.kg) || 0, num(x.r)); if (sc > bs) { bs = sc; best = x; } });
+  return best ? {kg:num(best.kg) || 0, r:num(best.r), date:h[0].date} : null;
+}
+// Wie weit bist du im aktuellen Level? (0–100 %)
+function lvProgress(id, sc, l) { if (l >= 5) return 100; const std = EX[id].std, lo = l > 0 ? std[l - 1] : 0, hi = std[l]; return Math.max(4, Math.min(100, Math.round((sc - lo) / (hi - lo) * 100))); }
+function lvRow(id) {
+  const ex = EX[id], b = bestEver(id), unit = ex.zeit ? " Sek." : " Wdh.";
+  if (b == null) return '<li><button type="button" class="row" data-act="info" data-ex="' + id + '"><span><b>' + esc(ex.name) + '</b><small>Noch nicht gemacht · ' + startTxt(id) + '</small></span><span class="lv off">–</span></button></li>';
+  const l = levelOf(id, b), ls = lastSet(id);
+  const now = noKg(ex) ? "Bester Satz: " + fmtNum(b) + unit : "Zuletzt: " + (ls ? fmtNum(ls.kg) + " kg × " + ls.r : "–");
+  const nx = l >= 5 ? "Höchstes Level erreicht 👑" : "Nächstes: " + badgeTxt(l + 1) + (noKg(ex) ? " ab " + ex.std[l] + unit : " ab ca. " + fmtNum(needKg(id, l + 1, 10)) + " kg × 10");
+  return '<li><button type="button" class="row" data-act="info" data-ex="' + id + '"><span><b>' + esc(ex.name) + '</b><small>' + now + '</small><span class="lvbar" aria-hidden="true"><i style="width:' + lvProgress(id, b, l) + '%"></i></span><small>' + nx + '</small></span>' + badge(l) + '</button></li>';
+}
+function viewLevel() {
+  const ids = Object.keys(EX), done = ids.filter(id => bestEver(id) != null), lvs = done.map(id => levelOf(id, bestEver(id)));
+  const avg = lvs.length ? Math.floor(lvs.reduce((a, b) => a + b, 0) / lvs.length + 1e-9) : 0;
+  if (!UI.lvTag) { const n = nextUp(); UI.lvTag = n ? n.plan : "A"; }
+  let h = '<div class="stack"><div><p class="eyebrow">Wie weit bist du?</p><h1>Level & Kilos</h1></div>';
+  // Gesamt-Level
+  h += '<div class="card ink"><p class="eyebrow">Dein Gesamt-Level</p>';
+  if (done.length) h += '<div class="big-row"><span class="big">' + LV[avg].e + '</span><span style="padding-bottom:4px"><b style="font-size:26px">' + LV[avg].n + '</b><br><span class="muted">' + done.length + ' von ' + ids.length + ' Übungen gemacht</span></span></div><div class="chips">' + LV.map((x, i) => { const n = lvs.filter(v => v === i).length; return n ? '<span class="chip">' + x.e + ' ' + x.n + ': ' + n + '</span>' : ''; }).join("") + '</div>';
+  else h += '<p>Noch nichts eingetragen. Nach deinem ersten Training siehst du hier für jede Übung, wie stark du bist.</p>';
+  h += '<p class="small muted">🥬 Lauch → 🐣 Rookie → ⚙️ Maschine → 🦍 Beast → 🐺 Alpha → 👑 Legende</p></div>';
+  // Übungen eines Tages mit Kilos und Level
+  h += '<div class="daychips seg3" role="group" aria-label="Trainingstag">' + Object.keys(PLAN).map(p => '<button type="button" data-act="lvf" data-v="' + p + '" class="' + (p === UI.lvTag ? "on" : "") + '" aria-pressed="' + (p === UI.lvTag) + '">' + p + ' · ' + PLAN[p].name.split(" ")[0] + '</button>').join("") + '</div>';
+  PLAN[UI.lvTag].areas.forEach(a => { h += '<div class="card"><div class="area-h"><h3>' + a.n + '</h3><span class="small muted">' + a.ex.filter(id => bestEver(id) != null).length + '/' + a.ex.length + ' gemacht</span></div><ul class="list">' + a.ex.map(lvRow).join("") + '</ul></div>'; });
+  h += '<p class="small muted">Der Balken zeigt, wie weit du bis zum nächsten Level bist. Das Level zählt immer dein bester Satz bisher.</p>';
+  const rows = done.map(id => ({id}));
   // Muskel-Karte
   const ws = weekSets(), lv = {}; for (const m in ws) lv[m] = level4(ws[m]);
   h += '<div class="card"><h3>Muskeln (letzte 7 Tage)</h3><div class="bodymap">' + bodyMap(lv) + '</div><div class="legend"><span><i style="background:var(--muscle);border:1px solid var(--line)"></i>0</span><span><i style="background:var(--heat1)"></i>unter 4</span><span><i style="background:var(--heat2)"></i>4–10 Ziel</span><span><i style="background:var(--heat3)"></i>über 10</span></div><div class="mbars">';
@@ -791,6 +828,22 @@ function viewFortschritt() {
   const ent = (S.body.entries || []).slice().sort((a, b) => a.d < b.d ? -1 : 1), kgPts = ent.filter(e => num(e.kg) != null).map(e => ({d:e.d, y:num(e.kg)}));
   h += '<div class="card"><h3>Körpergewicht</h3><div class="chart">' + lineChart(kgPts, "kg") + '</div><div class="grid2"><div class="field"><label for="bD">Datum</label><input id="bD" type="date" value="' + todayKey() + '"></div><div class="field"><label for="bKg">Gewicht (kg)</label><input id="bKg" inputmode="decimal" placeholder="z. B. 70,5"></div></div><button class="btn primary" data-act="body">Speichern</button><p class="small muted">1× pro Woche morgens wiegen und auf den Trend achten.</p></div></div>';
   return h;
+}
+
+/* ---------- Seite: ÜBUNGEN – alle Übungen mit Video ---------- */
+function viewUebungen() {
+  const f = UI.uxTag || "alle";
+  let h = '<div class="stack"><div><p class="eyebrow">' + Object.keys(EX).length + ' Übungen mit Video</p><h1>Übungen</h1></div>'
+    + '<div class="daychips seg4" role="group" aria-label="Filter">' + [["alle", "Alle"], ["A", "A · Arme"], ["B", "B · Brust"], ["C", "C · Beine"]].map(([v, n]) => '<button type="button" data-act="uxf" data-v="' + v + '" class="' + (v === f ? "on" : "") + '" aria-pressed="' + (v === f) + '">' + n + '</button>').join("") + '</div>'
+    + '<p class="small muted">Tipp auf eine Übung: Video, richtige Ausführung und Tipps. Dehnübungen findest du unter „Dehnen“.</p>';
+  for (const p of Object.keys(PLAN)) {
+    if (f !== "alle" && f !== p) continue;
+    PLAN[p].areas.forEach(a => {
+      h += '<div class="card"><div class="area-h"><h3>' + a.n + '</h3><span class="small muted">Tag ' + p + ' · ' + PLAN[p].tag + '</span></div><ul class="list">'
+        + a.ex.map(id => { const e = EX[id]; return '<li><button type="button" class="row" data-act="info" data-ex="' + id + '"><span><b>' + esc(e.name) + '</b><small>' + e.art + ' · ' + e.sets + ' × ' + e.min + '–' + e.max + (e.zeit ? " Sek." : " Wdh.") + '</small></span><span class="play" aria-hidden="true">▶</span></button></li>'; }).join("") + '</ul></div>';
+    });
+  }
+  return h + '</div>';
 }
 
 /* ---------- Seite: WISSEN ---------- */
@@ -819,13 +872,14 @@ function stretchSheet(id) {
 }
 
 /* ---------- Rendern & Navigation ---------- */
-const VIEWS = {start:viewStart, plan:viewPlan, "tag-a":() => viewTag("A"), "tag-b":() => viewTag("B"), "tag-c":() => viewTag("C"), training:viewTraining, dehnen:viewDehnen, kalender:viewKalender, mehr:viewMehr, fortschritt:viewFortschritt, wissen:viewWissen};
-const TAB_OF = {start:"start", plan:"plan", "tag-a":"plan", "tag-b":"plan", "tag-c":"plan", dehnen:"dehnen", kalender:"kalender", mehr:"mehr", fortschritt:"mehr", wissen:"mehr"};
+const VIEWS = {start:viewStart, plan:viewPlan, "tag-a":() => viewTag("A"), "tag-b":() => viewTag("B"), "tag-c":() => viewTag("C"), training:viewTraining, dehnen:viewDehnen, kalender:viewKalender, mehr:viewMehr, uebungen:viewUebungen, level:viewLevel, fortschritt:viewLevel, wissen:viewWissen};
+const TAB_OF = {start:"start", plan:"plan", "tag-a":"plan", "tag-b":"plan", "tag-c":"plan", dehnen:"dehnen", kalender:"kalender", uebungen:"uebungen", level:"level", fortschritt:"level"};
 function currentView() { const v = location.hash.replace("#", ""); return VIEWS[v] ? v : "start"; }
 function render() {
   const v = currentView(); UI.needRender = false;
   $("#main").innerHTML = VIEWS[v]();
   document.body.classList.toggle("focus", v === "training");
+  if ($("#moreBtn")) { if (v === "mehr" || v === "wissen") $("#moreBtn").setAttribute("aria-current", "page"); else $("#moreBtn").removeAttribute("aria-current"); }
   document.querySelectorAll(".tabs a").forEach(a => { if (a.dataset.tab === TAB_OF[v]) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   if (UI.sheet) renderSheet();
 }
@@ -902,6 +956,8 @@ document.addEventListener("click", async e => {
   const act = b.dataset.act, t = todayKey();
   switch (act) {
     case "go": closeSheet(); go(b.dataset.h); break;
+    case "uxf": UI.uxTag = b.dataset.v; render(); break;     // Filter auf der Übungen-Seite
+    case "lvf": UI.lvTag = b.dataset.v; render(); break;     // Tag auf der Level-Seite
     case "start": {
       const p = b.dataset.p, w = S.workouts[t];
       if (w && hasLogged(w) && w.plan !== p) toast("Heute läuft schon " + PLAN[w.plan].name);
