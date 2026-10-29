@@ -322,6 +322,8 @@ td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
 
 <script>
 "use strict";
+// iPhone: Zoomen mit zwei Fingern abschalten (Safari ignoriert sonst „maximum-scale“)
+["gesturestart", "gesturechange", "gestureend"].forEach(n => document.addEventListener(n, e => e.preventDefault(), {passive:false}));
 /* =====================================================================
    HANTELBUCH v3 – Trainingsplan, Trainings-Tagebuch und Dehnplan
    Mi = A (Arme & Schultern) · Fr = B (Brust & Rücken) · Sa = C (Beine & Bauch)
