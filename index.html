@@ -656,6 +656,8 @@ function viewStart() {
     }
     if (!hasLogged(w)) h += '<p class="small muted">Heute trotzdem trainieren? ' + Object.keys(PLAN).map(p => '<button class="link" data-act="start" data-p="' + p + '">' + PLAN[p].name + '</button>').join(" · ") + '</p>';
   }
+  // Erinnerung an die Sicherung (alle 30 Tage)
+  if (backupDue()) h += '<div class="card note"><p><b>📦 Zeit für eine Sicherung</b><br><span class="small">Deine Trainings liegen nur auf diesem Handy. Ein Tipp – dann sind sie sicher.</span></p><div class="btn-row"><button class="btn primary" data-act="backup">Jetzt sichern</button><button class="btn" data-act="bsnooze">Später</button></div></div>';
   // Mit Kollege trainiert? Ein Tipp – zählt als Gym-Besuch (eigene Übungen, nichts eintragen nötig)
   if (dayStatus(t) !== "done") h += '<button class="btn block" data-act="buddy" data-d="' + t + '">👥 Heute mit Kollege trainiert</button>';
   // Zähler: wie oft warst du schon da?
@@ -777,12 +779,36 @@ function daySheet(k) {
   const w = S.workouts[k], st = dayStatus(k), p = planOf(k);
   let h = '<div class="sheet-top"><h2>' + esc(fmtDate(k, {weekday:"long", day:"numeric", month:"long"})) + '</h2><button class="icon-btn" data-act="close" aria-label="Schließen">' + X_ICON + '</button></div><p class="muted">' + (w && w.buddy ? "👥 Mit Kollege trainiert" : p ? PLAN[p].name : "Kein Trainingstag") + '</p>';
   if (w && hasLogged(w)) { h += '<div class="card"><div class="tbl-wrap"><table><tbody>'; for (const id in w.ex) { if (!EX[id]) continue; const ss = okSets(w, id); if (!ss.length) continue; h += '<tr><td>' + esc(EX[id].name) + '</td><td class="r">' + ss.map(s => noKg(EX[id]) ? num(s.r) : fmtNum(num(s.kg) || 0) + "×" + num(s.r)).join(", ") + '</td></tr>'; } h += '</tbody></table></div>' + (w.note ? '<p class="small"><b>Notiz:</b> ' + esc(w.note) + '</p>' : '') + '</div>'; }
+  if (w && w.buddy) h += '<div class="field"><label for="bNote">Was habt ihr gemacht? (optional)</label><textarea id="bNote" data-d="' + k + '" placeholder="z. B. Brust mit Langhantel, 3 × 10 mit 40 kg">' + esc(w.note || "") + '</textarea></div><button class="btn primary" data-act="close">Fertig</button>';
   if (k > todayKey()) h += '<p class="small muted">Liegt in der Zukunft.</p>';
-  else if (!(w && hasLogged(w))) h += '<div class="btn-row"><button class="btn primary" data-act="setst" data-st="manual" data-d="' + k + '">War da ✓</button><button class="btn" data-act="buddy" data-d="' + k + '">Mit Kollege 👥</button><button class="btn" data-act="setst" data-st="missed" data-d="' + k + '">Nicht da ✗</button><button class="btn" data-act="setst" data-st="excused" data-d="' + k + '">Urlaub / krank</button></div>';
+  else if (!(w && hasLogged(w)) && !(w && w.buddy)) h += '<div class="btn-row"><button class="btn primary" data-act="setst" data-st="manual" data-d="' + k + '">War da ✓</button><button class="btn" data-act="buddy" data-d="' + k + '">Mit Kollege 👥</button><button class="btn" data-act="setst" data-st="missed" data-d="' + k + '">Nicht da ✗</button><button class="btn" data-act="setst" data-st="excused" data-d="' + k + '">Urlaub / krank</button></div>';
   if (w) h += UI.confirm === "del-" + k ? '<div class="card note"><p><b>⚠️ Achtung:</b> Alle Sätze und Notizen von diesem Tag werden gelöscht. Das geht nicht rückgängig.</p><div class="btn-row"><button class="btn primary" data-act="deld" data-d="' + k + '">Ja, löschen</button><button class="btn" data-act="cancel">Abbrechen</button></div></div>' : '<button class="link" data-act="askdel" data-d="' + k + '">Eintrag löschen</button>';
   if (st === "missed" && !w) h += '<p class="small muted">Zählt automatisch als „gefehlt“, weil nichts eingetragen ist.</p>';
   return h;
 }
+
+/* ---------- Sicherung: mit einem Tipp speichern / senden ---------- */
+function backupDue() {   // Erinnerung: alle 30 Tage, „Später“ verschiebt um 7 Tage
+  if (IN_CLAUDE || stats().total < 1) return false;
+  const t = todayKey(), last = S.settings.lastBackup, snooze = S.settings.backupSnooze;
+  if (snooze && diffDays(snooze, t) < 7) return false;
+  return !last || diffDays(last, t) >= 30;
+}
+async function shareBackup() {
+  const t = todayKey(), txt = JSON.stringify(S), name = "hantelbuch-sicherung-" + t + ".txt";
+  try {
+    const f = new File([txt], name, {type:"text/plain"});
+    if (navigator.canShare && navigator.share && navigator.canShare({files:[f]})) await navigator.share({files:[f], title:"Hantelbuch-Sicherung"});
+    else {   // kein Teilen möglich (z. B. am PC): als Datei herunterladen
+      const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([txt], {type:"text/plain"})); a.download = name;
+      document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    }
+    S.settings.lastBackup = t; delete S.settings.backupSnooze; changed("settings"); toast("Sicherung gespeichert ✓"); render();
+  } catch (e) { if (e && e.name === "AbortError") return; toast("Hat nicht geklappt – nimm „Als Text“ unter Mehr"); }
+}
+// Sicherung prüfen, bevor sie geladen wird
+function parseBackup(txt) { try { const o = JSON.parse(txt); return o && o.settings && o.workouts && typeof o.workouts === "object" ? o : null; } catch (e) { return null; } }
+function loadBackup(o) { const old = allKeys(); S = Object.assign(freshState(), o); new Set(old.concat(allKeys())).forEach(k => changed(k)); toast("Sicherung geladen ✓"); render(); }
 
 /* ---------- Seite: MEHR ---------- */
 function viewMehr() {
@@ -792,9 +818,16 @@ function viewMehr() {
   if (!IN_CLAUDE) h += '<div class="card prose"><h3>Als App aufs Handy</h3><p class="small"><b>iPhone (Safari):</b> Teilen-Symbol → „Zum Home-Bildschirm“.<br><b>Android (Chrome):</b> ⋮ → „Zum Startbildschirm hinzufügen“.</p><p class="small muted">Deine Daten bleiben auf diesem Handy. Mach ab und zu eine Sicherung (unten).</p></div>';
   h += '<div class="card"><h3>Einstellungen</h3><div class="field"><label for="startD">Plan-Start (ab da zählen Woche 1 und die Check-Liste)</label><input id="startD" type="date" value="' + esc(start()) + '"></div>'
     + '<p class="small muted">Speicherort: ' + (COL ? "privat in deinem Claude-Konto + dieser Browser." : IN_CLAUDE ? "nur dieser Browser. Öffne die App angemeldet in Claude." : "auf diesem Gerät (Browser-Speicher).") + '</p>'
-    + '<div class="btn-row"><button class="btn" data-act="export">Sicherung anzeigen</button><button class="btn" data-act="import">Sicherung einfügen</button></div><div id="dataBox"></div>';
+    + '</div>';
+  // Sicherung
+  const lb = S.settings.lastBackup;
+  h += '<div class="card"><h3>📦 Sicherung</h3><p class="small">' + (lb ? 'Letzte Sicherung: <b>' + esc(fmtDate(lb, {day:"numeric", month:"long", year:"numeric"})) + '</b>.' : '<b>Noch keine Sicherung.</b>') + ' Deine Daten liegen nur auf diesem Handy.</p>'
+    + '<button class="btn primary" data-act="backup">Sicherung speichern / senden</button><p class="small muted">Danach z. B. „In Dateien sichern“ oder an dich selbst schicken.</p>'
+    + '<button class="btn" data-act="impfile">Sicherung laden (Datei)</button><input type="file" id="impFile" accept=".txt,.json,text/plain,application/json" hidden>';
+  if (UI.confirm === "fileimp" && UI.pendingImport) { const n = Object.keys(UI.pendingImport.workouts).length; h += '<div class="card note"><p><b>⚠️ Achtung, Datenverlust:</b> Die Sicherung (' + n + (n === 1 ? ' Tag' : ' Tage') + ') ersetzt <b>alle</b> aktuellen Daten auf diesem Handy.</p><div class="btn-row"><button class="btn primary" data-act="fileimp2">Ja, laden</button><button class="btn" data-act="cancel">Abbrechen</button></div></div>'; }
+  h += '<details class="how"><summary>Als Text (zum Kopieren)</summary><div class="btn-row" style="margin-top:8px"><button class="btn" data-act="export">Sicherung anzeigen</button><button class="btn" data-act="import">Sicherung einfügen</button></div><div id="dataBox"></div></details></div>';
   h += UI.confirm === "reset" ? '<div class="card note"><p><b>⚠️ Achtung, Datenverlust:</b> Alle Trainings, Körperwerte und die Check-Liste werden gelöscht. Mach vorher eine Sicherung!</p><div class="btn-row"><button class="btn primary" data-act="reset2">Ja, alles löschen</button><button class="btn" data-act="cancel">Abbrechen</button></div></div>' : '<button class="link" data-act="reset">Alle Daten löschen …</button>';
-  return h + '</div></div>';
+  return h + '</div>';
 }
 
 /* ---------- Seite: LEVEL & KILOS – wie weit bist du? ---------- */
@@ -968,11 +1001,16 @@ document.addEventListener("input", e => {
   const el = e.target;
   if (el.matches(".in-r")) { const c = rowCtx(el); if (c) { c.set.r = num(el.value); changed("w-" + c.t); } }
   else if (el.id === "wtIn") { const v = num(el.value); if (v != null) setWeight(v); }
+  else if (el.id === "bNote") { const w = S.workouts[el.dataset.d]; if (w) { w.note = el.value; changed("w-" + el.dataset.d); } }
   else if (el.id === "note") { const t = todayKey(), w = ensureWorkout(t, todayPlan()); w.note = el.value; changed("w-" + t); }
 });
 document.addEventListener("change", e => {
   const el = e.target;
-  if (el.id === "chartSel") { UI.chartEx = el.value; render(); }
+  if (el.id === "impFile" && el.files && el.files[0]) {   // Sicherungs-Datei gewählt → erst nachfragen
+    const file = el.files[0]; el.value = "";   // gleiche Datei nochmal wählbar
+    file.text().then(txt => { const o = parseBackup(txt); if (!o) { toast("Das ist keine Hantelbuch-Sicherung"); return; } UI.pendingImport = o; UI.confirm = "fileimp"; render(); });
+  }
+  else if (el.id === "chartSel") { UI.chartEx = el.value; render(); }
   else if (el.id === "startD" && /^\d{4}-\d{2}-\d{2}$/.test(el.value)) { S.settings.startDate = el.value; changed("settings"); toast("Plan-Start gespeichert"); }
   else if (el.id === "wtIn") { const v = num(el.value); if (v != null) { setWeight(v); el.value = String(v).replace(".", ","); } }
   else if (el.matches(".kg-in")) { const v = num(el.value); if (v != null && v >= 0) { saveKg(el.dataset.ex, Math.round(v * 10) / 10, todayKey()); softRender(); } }
@@ -1039,7 +1077,7 @@ document.addEventListener("click", async e => {
     case "buddy": {   // Tag als „mit Kollege trainiert“ eintragen
       const k = b.dataset.d, w = ensureWorkout(k, planOf(k)); w.status = "done"; w.buddy = true; w.finishedAt = Date.now(); changed("w-" + k);
       closeSheet(); UI.month = k.slice(0, 7); UI.flash = k; setTimeout(() => { UI.flash = null; }, 2500);
-      toast("Mit Kollege eingetragen 👥 Zählt als Gym-Besuch!", 3000); go("kalender"); break;
+      toast("Mit Kollege eingetragen 👥 Zählt als Gym-Besuch!", 3000); go("kalender"); openSheet("day", k); break;
     }
     case "setst": { const k = b.dataset.d, w = ensureWorkout(k, planOf(k) || "A"); w.status = b.dataset.st; w.buddy = false; changed("w-" + k); toast("Eingetragen"); renderSheet(); render(); break; }
     case "askdel": UI.confirm = "del-" + b.dataset.d; renderSheet(); break;
@@ -1063,11 +1101,11 @@ document.addEventListener("click", async e => {
     case "export": $("#dataBox").innerHTML = '<div class="field"><label for="exp">Deine Sicherung – kopieren und z. B. in Obsidian ablegen</label><textarea id="exp" readonly rows="5"></textarea></div><button class="btn" data-act="copy">Kopieren</button>'; $("#exp").value = JSON.stringify(S); break;
     case "copy": { const ta = $("#exp"); try { await navigator.clipboard.writeText(ta.value); toast("Kopiert"); } catch (err) { ta.focus(); ta.select(); toast("Text markiert – jetzt kopieren"); } break; }
     case "import": $("#dataBox").innerHTML = '<div class="field"><label for="imp">Sicherung hier einfügen</label><textarea id="imp" rows="5"></textarea></div><p class="small"><b>⚠️ Achtung:</b> Das ersetzt alle aktuellen Daten.</p><button class="btn primary" data-act="import2">Ersetzen & importieren</button>'; break;
-    case "import2": {
-      let o; try { o = JSON.parse($("#imp").value); } catch (err) { toast("Keine gültige Sicherung"); return; }
-      if (!o || !o.settings || !o.workouts || typeof o.workouts !== "object") { toast("Keine gültige Sicherung"); return; }
-      const old = allKeys(); S = Object.assign(freshState(), o); new Set(old.concat(allKeys())).forEach(k => changed(k)); toast("Importiert"); render(); break;
-    }
+    case "import2": { const o = parseBackup($("#imp").value); if (!o) { toast("Keine gültige Sicherung"); return; } loadBackup(o); break; }
+    case "backup": shareBackup(); break;
+    case "bsnooze": S.settings.backupSnooze = t; changed("settings"); toast("Ok, ich erinnere dich in einer Woche"); render(); break;
+    case "impfile": $("#impFile").click(); break;
+    case "fileimp2": { const o = UI.pendingImport; UI.pendingImport = null; UI.confirm = null; if (o) loadBackup(o); break; }
     case "reset": UI.confirm = "reset"; render(); break;
     case "reset2": { const old = allKeys(); UI.confirm = null; S = freshState(); old.forEach(k => changed(k)); SINGLE.forEach(k => changed(k)); toast("Alles gelöscht"); render(); break; }
   }
