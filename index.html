@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#000000">
 <meta name="description" content="Hantelbuch – Trainingsplan, Trainings-Tagebuch und Dehnplan">
 <link rel="manifest" href="manifest.webmanifest">
@@ -48,7 +48,10 @@ img{max-width:100%}</style>
 body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
 button,input,textarea,select{font:inherit;color:inherit}
-button{cursor:pointer}
+button{cursor:pointer;-webkit-user-select:none;user-select:none}
+/* Kein Zoom bei schnellem Doppeltippen (z. B. auf + bei den Kilos) */
+*{touch-action:manipulation}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 :focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 a{color:var(--fg)}
 
